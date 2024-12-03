@@ -105,7 +105,7 @@ void JSDrive::loop() {
       this->moving_ = false;
     } else {
       static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
-      buf[2] = (this->move_dir_ ? 0x04 : 0x02);
+      buf[2] = (this->move_dir_ ? 0x02 : 0x04);
       buf[3] = 0xff - buf[2];
       ESP_LOGV(TAG, "Moving %02x", buf[2]);
 

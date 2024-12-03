@@ -20,7 +20,7 @@ const char *jsdrive_operation_to_str(JSDriveOperation op) {
 }
 
 static int segs_to_num(uint8_t segments) {
-  switch (segments & 0x7f) {
+  switch (segments & 0xFE) {
    case 0xFC:
     return 0;
    case 0x60:

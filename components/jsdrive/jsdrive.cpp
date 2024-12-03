@@ -69,10 +69,10 @@ void JSDrive::loop() {
       if (this->message_length_ > 5)
         csum += d[3];
       uint8_t tcsum = this->message_length_ == 5 ? d[3] : d[4];
-      /* if (csum != tcsum) { */
-      /*   ESP_LOGE(TAG, "desk checksum mismatch: %02x != %02x", csum, tcsum); */
-      /*   this->desk_buffer_.clear(); */
-      /*   continue; */
+      if (csum != tcsum) {
+        ESP_LOGE(TAG, "desk checksum mismatch: %02x != %02x", csum, tcsum);
+        this->desk_buffer_.clear();
+        continue;
       }
       do {
         if ((this->message_length_ == 6) && (d[3] != 1)) {

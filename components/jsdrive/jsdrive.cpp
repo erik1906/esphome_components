@@ -107,6 +107,8 @@ void JSDrive::loop() {
       static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
       buf[2] = (this->move_dir_ ? 0x04 : 0x02);
       buf[3] = 0xff - buf[2];
+      ESP_LOGV(TAG, "Moving %02x", buf[2]);
+
       this->desk_uart_->write_array(buf, 5);
     }
   }
@@ -148,6 +150,8 @@ void JSDrive::loop() {
         this->memory3_bsensor_->publish_state(buttons & 10);
       if (!this->moving_ && this->desk_uart_ != nullptr) {
         static uint8_t buf[] = {0xa5, 0, buttons, (uint8_t) (0xff - buttons), 0xff};
+
+        ESP_LOGV(TAG, "Moving %02x", buf[2]);
         this->desk_uart_->write_array(buf, 5);
       }
     }

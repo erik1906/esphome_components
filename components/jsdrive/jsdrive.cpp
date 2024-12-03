@@ -20,29 +20,29 @@ const char *jsdrive_operation_to_str(JSDriveOperation op) {
 }
 
 static int segs_to_num(uint8_t segments) {
-  switch (segments & 0xFE) {
-    case 0x3f:
-      return 0;
-    case 0x06:
-      return 1;
-    case 0x5b:
-      return 2;
-    case 0x4f:
-      return 3;
-    case 0x67:
-      return 4;
-    case 0x6d:
-      return 5;
-    case 0x7d:
-      return 6;
-    case 0x07:
-      return 7;
-    case 0x7f:
-      return 8;
-    case 0x6f:
-      return 9;   
-    default:
-      ESP_LOGV(TAG, "unknown digit: %02x", segments & 0xFE);
+  switch (segments & 0x7f) {
+   case 0x3f:
+    return 0;
+   case 0x06:
+    return 1;
+   case 0x5b:
+    return 2;
+   case 0x4f:
+    return 3;
+   case 0x67:
+    return 4;
+   case 0x6d:
+    return 5;
+   case 0x7d:
+    return 6;
+   case 0x07:
+    return 7;
+   case 0x7f:
+    return 8;
+   case 0x6f:
+    return 9;
+   default:
+    ESP_LOGV(TAG, "unknown digit: %02f", segments & 0x7f);
   }
   return -1;
 }
@@ -70,11 +70,11 @@ void JSDrive::loop() {
       if (this->message_length_ > 5)
         csum += d[3];
       uint8_t tcsum = this->message_length_ == 5 ? d[3] : d[4];
-      /* if (csum != tcsum) { */
-      /*   ESP_LOGE(TAG, "desk checksum mismatch: %02x != %02x", csum, tcsum); */
-      /*   this->desk_buffer_.clear(); */
-      /*   continue; */
-      /* } */
+      if (csum != tcsum) {
+        ESP_LOGE(TAG, "desk checksum mismatch: %02x != %02x", csum, tcsum);
+        this->desk_buffer_.clear();
+        continue;
+      }
       do {
         if ((this->message_length_ == 6) && (d[3] != 1)) {
           ESP_LOGV(TAG, "unknown message type %02x", d[3]);
@@ -89,7 +89,7 @@ void JSDrive::loop() {
           break;
         num = segs_to_num(d[0]) * 100 + segs_to_num(d[1]) * 10 + segs_to_num(d[2]);
         have_data = true;
-        if (d[1] & 0x01)
+        if (d[1] & 0x80)
           num /= 10.0;
       } while (false);
       this->desk_buffer_.clear();
@@ -126,26 +126,26 @@ void JSDrive::loop() {
       this->rem_rx_ = false;
       uint8_t *d = this->rem_buffer_.data();
       uint8_t csum = d[0] + d[1] + d[2];
-      /* if (csum != d[3]) { */
-      /*   ESP_LOGE(TAG, "remote checksum mismatch: %02x != %02x", csum, d[3]); */
-      /*   this->rem_buffer_.clear(); */
-      /*   continue; */
-      /* } */
+      if (csum != d[3]) {
+        ESP_LOGE(TAG, "remote checksum mismatch: %02x != %02x", csum, d[3]);
+        this->rem_buffer_.clear();
+        continue;
+      }
       buttons = d[1];
       have_data = true;
       this->rem_buffer_.clear();
     }
     if (have_data) {
       if (this->up_bsensor_ != nullptr)
-        this->up_bsensor_->publish_state(buttons & 0x20);
+        this->up_bsensor_->publish_state(buttons & 0x04);
       if (this->down_bsensor_ != nullptr)
-        this->down_bsensor_->publish_state(buttons & 0x40);
+        this->down_bsensor_->publish_state(buttons & 0x02);
       if (this->memory1_bsensor_ != nullptr)
-        this->memory1_bsensor_->publish_state(buttons & 2);
+        this->memory1_bsensor_->publish_state(buttons & 40);
       if (this->memory2_bsensor_ != nullptr)
-        this->memory2_bsensor_->publish_state(buttons & 4);
+        this->memory2_bsensor_->publish_state(buttons & 20);
       if (this->memory3_bsensor_ != nullptr)
-        this->memory3_bsensor_->publish_state(buttons & 8);
+        this->memory3_bsensor_->publish_state(buttons & 10);
       if (!this->moving_ && this->desk_uart_ != nullptr) {
         static uint8_t buf[] = {0xa5, 0, buttons, (uint8_t) (0xff - buttons), 0xff};
         this->desk_uart_->write_array(buf, 5);

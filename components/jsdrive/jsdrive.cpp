@@ -42,7 +42,7 @@ static int segs_to_num(uint8_t segments) {
     case 0x6f:
       return 9;   
     default:
-      ESP_LOGV(TAG, "unknown digit: %02x", segments & 0x7f);
+      ESP_LOGV(TAG, "unknown digit: %02x", segments & 0xFE);
   }
   return -1;
 }

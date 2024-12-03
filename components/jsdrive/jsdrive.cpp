@@ -89,7 +89,7 @@ void JSDrive::loop() {
           break;
         num = segs_to_num(d[0]) * 100 + segs_to_num(d[1]) * 10 + segs_to_num(d[2]);
         have_data = true;
-        if (d[1] & 0x80)
+        if (d[1] & 0x01)
           num /= 10.0;
       } while (false);
       this->desk_buffer_.clear();
@@ -141,7 +141,7 @@ void JSDrive::loop() {
       if (this->down_bsensor_ != nullptr)
         this->down_bsensor_->publish_state(buttons & 0x40);
       if (this->memory1_bsensor_ != nullptr)
-        this->memory1_bsensor_->publish_state(buttons & 2);
+        this->memory1_bsensor_->publish_state(butons & 2);
       if (this->memory2_bsensor_ != nullptr)
         this->memory2_bsensor_->publish_state(buttons & 4);
       if (this->memory3_bsensor_ != nullptr)

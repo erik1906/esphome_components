@@ -21,27 +21,28 @@ const char *jsdrive_operation_to_str(JSDriveOperation op) {
 
 static int segs_to_num(uint8_t segments) {
   switch (segments & 0xFE) {
-   case 0x3f:
-    return 0;
-   case 0x06:
-    return 1;
-   case 0x5b:
-    return 2;
-   case 0x4f:
-    return 3;
-   case 0x67:
-    return 4;
-   case 0x6d:
-    return 5;
-   case 0x7d:
-    return 6;
-   case 0x07:
-    return 7;
-   case 0x7f:
-    return 8;
-   case 0x6f:
-    return 9;   default:
-    ESP_LOGV(TAG, "unknown digit: %02x", segments & 0x7f);
+    case 0x3f:
+      return 0;
+    case 0x06:
+      return 1;
+    case 0x5b:
+      return 2;
+    case 0x4f:
+      return 3;
+    case 0x67:
+      return 4;
+    case 0x6d:
+      return 5;
+    case 0x7d:
+      return 6;
+    case 0x07:
+      return 7;
+    case 0x7f:
+      return 8;
+    case 0x6f:
+      return 9;   
+    default:
+      ESP_LOGV(TAG, "unknown digit: %02x", segments & 0x7f);
   }
   return -1;
 }
@@ -140,7 +141,7 @@ void JSDrive::loop() {
       if (this->down_bsensor_ != nullptr)
         this->down_bsensor_->publish_state(buttons & 0x40);
       if (this->memory1_bsensor_ != nullptr)
-        this->memory1_bsensor_->publish_state(butons & 2);
+        this->memory1_bsensor_->publish_state(buttons & 2);
       if (this->memory2_bsensor_ != nullptr)
         this->memory2_bsensor_->publish_state(buttons & 4);
       if (this->memory3_bsensor_ != nullptr)

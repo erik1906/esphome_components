@@ -126,11 +126,11 @@ void JSDrive::loop() {
       this->rem_rx_ = false;
       uint8_t *d = this->rem_buffer_.data();
       uint8_t csum = d[0] + d[1] + d[2];
-      if (csum != d[3]) {
-        ESP_LOGE(TAG, "remote checksum mismatch: %02x != %02x", csum, d[3]);
-        this->rem_buffer_.clear();
-        continue;
-      }
+      /* if (csum != d[3]) { */
+      /*   ESP_LOGE(TAG, "remote checksum mismatch: %02x != %02x", csum, d[3]); */
+      /*   this->rem_buffer_.clear(); */
+      /*   continue; */
+      /* } */
       buttons = d[1];
       have_data = true;
       this->rem_buffer_.clear();

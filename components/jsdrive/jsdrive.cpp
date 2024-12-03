@@ -104,9 +104,9 @@ void JSDrive::loop() {
         (!this->move_dir_ && (this->current_pos_ <= this->target_pos_))) {
       this->moving_ = false;
     } else {
-      static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
-      buf[2] = (this->move_dir_ ? 0x02 : 0x04);
-      buf[3] = 0xff - buf[2];
+      static uint8_t buf[] = {0xa5, 0, 0x04, 0xFB, 0xff};
+      /* buf[2] = (this->move_dir_ ? 0x04 : 0x02); */
+      /* buf[3] = 0xff - buf[2]; */
       ESP_LOGV(TAG, "Moving %02x", buf[2]);
 
       this->desk_uart_->write_array(buf, 5);

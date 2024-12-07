@@ -104,12 +104,12 @@ void JSDrive::loop() {
         (!this->move_dir_ && (this->current_pos_ <= this->target_pos_))) {
       this->moving_ = false;
     } else {
-      static uint8_t buf[] = {0xa5, 0, 0x04, 0xFB, 0xff};
-      /* buf[2] = (this->move_dir_ ? 0x04 : 0x02); */
-      /* buf[3] = 0xff - buf[2]; */
-      ESP_LOGV(TAG, "Moving %02x", buf[2]);
-
-      this->desk_uart_->write_array(buf, 5);
+      static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
+      buf[2] = (this->move_dir_ ? 0x20 : 0x40);
+      buf[3] = 0xff - buf[2];
+      /*this->desk_uart_->write_array(buf, 5);*/
+ ESP_LOGV("DeskControl", "Sending message: %02X %02X %02X %02X %02X", 
+    buf[0], buf[1], buf[2], buf[3], buf[4]);
     }
   }
   uint8_t buttons = 0;
@@ -139,20 +139,19 @@ void JSDrive::loop() {
     }
     if (have_data) {
       if (this->up_bsensor_ != nullptr)
-        this->up_bsensor_->publish_state(buttons & 0x04);
+        this->up_bsensor_->publish_state(buttons & 0x20);
       if (this->down_bsensor_ != nullptr)
-        this->down_bsensor_->publish_state(buttons & 0x02);
+        this->down_bsensor_->publish_state(buttons & 0x40);
       if (this->memory1_bsensor_ != nullptr)
-        this->memory1_bsensor_->publish_state(buttons & 40);
+        this->memory1_bsensor_->publish_state(buttons & 2);
       if (this->memory2_bsensor_ != nullptr)
-        this->memory2_bsensor_->publish_state(buttons & 20);
+        this->memory2_bsensor_->publish_state(buttons & 4);
       if (this->memory3_bsensor_ != nullptr)
-        this->memory3_bsensor_->publish_state(buttons & 10);
+        this->memory3_bsensor_->publish_state(buttons & 8);
       if (!this->moving_ && this->desk_uart_ != nullptr) {
         static uint8_t buf[] = {0xa5, 0, buttons, (uint8_t) (0xff - buttons), 0xff};
-
-        ESP_LOGV(TAG, "Moving %02x", buf[2]);
-        this->desk_uart_->write_array(buf, 5);
+  ESP_LOGV("DeskControl", "Sending message: %02X %02X %02X %02X %02X", 
+    buf[0], buf[1], buf[2], buf[3], buf[4]);       /*this->desk_uart_->write_array(buf, 5);*/
       }
     }
   }

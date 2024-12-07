@@ -135,6 +135,8 @@ void JSDrive::loop() {
       }
       buttons = d[1];
       have_data = true;
+
+        ESP_LOGE(TAG, "remote data: %02x != %02x", d[1], buttons);
       this->rem_buffer_.clear();
     }
     if (have_data) {

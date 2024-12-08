@@ -137,15 +137,15 @@ void JSDrive::loop() {
     }
     if (have_data) {
       if (this->up_bsensor_ != nullptr)
-        this->up_bsensor_->publish_state(buttons & 0x20);
+        this->up_bsensor_->publish_state(buttons & 0x04);
       if (this->down_bsensor_ != nullptr)
-        this->down_bsensor_->publish_state(buttons & 0x40);
+        this->down_bsensor_->publish_state(buttons & 0x02);
       if (this->memory1_bsensor_ != nullptr)
-        this->memory1_bsensor_->publish_state(buttons & 2);
+        this->memory1_bsensor_->publish_state(buttons & 0x40);
       if (this->memory2_bsensor_ != nullptr)
-        this->memory2_bsensor_->publish_state(buttons & 4);
+        this->memory2_bsensor_->publish_state(buttons & 0x20);
       if (this->memory3_bsensor_ != nullptr)
-        this->memory3_bsensor_->publish_state(buttons & 8);
+        this->memory3_bsensor_->publish_state(buttons & 0x10);
       if (!this->moving_ && this->desk_uart_ != nullptr) {
         static uint8_t buf[] = {0xa5, 0, buttons, (uint8_t) (0xff - buttons), 0xff};
         this->desk_uart_->write_array(buf, 5);

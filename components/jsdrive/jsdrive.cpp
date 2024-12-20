@@ -99,38 +99,42 @@ void JSDrive::loop() {
       this->current_pos_ = num;
     }
   }
-  /* if (this->moving_) { */
-  /*   if ((this->move_dir_ && (this->current_pos_ >= this->target_pos_)) || */
-  /*       (!this->move_dir_ && (this->current_pos_ <= this->target_pos_))) { */
-  /*     this->moving_ = false; */
-  /*   } else { */
-  /*     static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff}; */
-  /*     buf[2] = (this->move_dir_ ? 0x20 : 0x40); */
-  /*     buf[3] = 0xff - buf[2]; */
-  /*     this->desk_uart_->write_array(buf, 5); */
-  /*   } */
-  /* } */
+  if (this->moving_) {
+    if ((this->move_dir_ && (this->current_pos_ >= this->target_pos_)) ||
+        (!this->move_dir_ && (this->current_pos_ <= this->target_pos_))) {
+      this->moving_ = false;
+    } else {
+      static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
+      buf[2] = (this->move_dir_ ? 0x20 : 0x40);
+      buf[3] = 0xff - buf[2];
+      this->desk_uart_->write_array(buf, 5);
+    }
+  }
   uint8_t buttons = 0;
-  int counter = 0;
   have_data = false;
   if (this->remote_uart_ != nullptr) {
-    if (this->remote_uart_->available()) {
+    while (this->remote_uart_->available()) {
       this->remote_uart_->read_byte(&c);
       if (!this->rem_rx_) {
         if (c == 0xa5)
           this->rem_rx_ = true;
+        continue;
       }
       this->rem_buffer_.push_back(c);
+      if (this->rem_buffer_.size() < 4)
+        continue;
       this->rem_rx_ = false;
       uint8_t *d = this->rem_buffer_.data();
       uint8_t csum = d[0] + d[1] + d[2];
       if (csum != d[3]) {
         ESP_LOGE(TAG, "remote checksum mismatch: %02x != %02x", csum, d[3]);
         this->rem_buffer_.clear();
+        continue;
       }
       buttons = d[1];
       have_data = true;
       this->rem_buffer_.clear();
+      this->rem_buffer_.resize(0);
     }
     if (have_data) {
       if (this->up_bsensor_ != nullptr)

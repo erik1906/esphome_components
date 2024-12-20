@@ -99,17 +99,17 @@ void JSDrive::loop() {
       this->current_pos_ = num;
     }
   }
-  if (this->moving_) {
-    if ((this->move_dir_ && (this->current_pos_ >= this->target_pos_)) ||
-        (!this->move_dir_ && (this->current_pos_ <= this->target_pos_))) {
-      this->moving_ = false;
-    } else {
-      static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
-      buf[2] = (this->move_dir_ ? 0x20 : 0x40);
-      buf[3] = 0xff - buf[2];
-      this->desk_uart_->write_array(buf, 5);
-    }
-  }
+  /* if (this->moving_) { */
+  /*   if ((this->move_dir_ && (this->current_pos_ >= this->target_pos_)) || */
+  /*       (!this->move_dir_ && (this->current_pos_ <= this->target_pos_))) { */
+  /*     this->moving_ = false; */
+  /*   } else { */
+  /*     static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff}; */
+  /*     buf[2] = (this->move_dir_ ? 0x20 : 0x40); */
+  /*     buf[3] = 0xff - buf[2]; */
+  /*     this->desk_uart_->write_array(buf, 5); */
+  /*   } */
+  /* } */
   uint8_t buttons = 0;
   have_data = false;
   if (this->remote_uart_ != nullptr) {

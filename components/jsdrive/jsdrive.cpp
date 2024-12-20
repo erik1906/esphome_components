@@ -121,8 +121,6 @@ void JSDrive::loop() {
           this->rem_rx_ = true;
       }
       this->rem_buffer_.push_back(c);
-      if (this->rem_buffer_.size() < 4)
-        continue;
       this->rem_rx_ = false;
       uint8_t *d = this->rem_buffer_.data();
       uint8_t csum = d[0] + d[1] + d[2];

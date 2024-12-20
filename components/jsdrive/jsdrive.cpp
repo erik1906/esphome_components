@@ -119,7 +119,6 @@ void JSDrive::loop() {
       if (!this->rem_rx_) {
         if (c == 0xa5)
           this->rem_rx_ = true;
-        continue;
       }
       this->rem_buffer_.push_back(c);
       if (this->rem_buffer_.size() < 4)
@@ -130,7 +129,6 @@ void JSDrive::loop() {
       if (csum != d[3]) {
         ESP_LOGE(TAG, "remote checksum mismatch: %02x != %02x", csum, d[3]);
         this->rem_buffer_.clear();
-        continue;
       }
       buttons = d[1];
       have_data = true;

@@ -111,7 +111,7 @@ void JSDrive::loop() {
   /*   } */
   /* } */
   uint8_t buttons = 0;
-  have_data = false;
+  bool have_data_desk = false;
   if (this->remote_uart_ != nullptr) {
     while (this->remote_uart_->available()) {
       this->remote_uart_->read_byte(&c);
@@ -132,11 +132,11 @@ void JSDrive::loop() {
         continue;
       }
       buttons = d[1];
-      have_data = true;
+      have_data_desk = true;
       this->rem_buffer_.clear();
       this->rem_buffer_.resize(0);
     }
-    if (have_data) {
+    if (have_data_desk) {
       if (this->up_bsensor_ != nullptr)
         this->up_bsensor_->publish_state(buttons & 0x20);
       if (this->down_bsensor_ != nullptr)

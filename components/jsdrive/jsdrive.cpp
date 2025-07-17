@@ -102,13 +102,23 @@ void JSDrive::loop() {
     }
   }
   if (this->moving_) {
+    ESP_LOGV(TAG, "Moving: current=%.1f, target=%.1f, dir=%s",
+             this->current_pos_, this->target_pos_,
+             this->move_dir_ ? "UP" : "DOWN");
+
     if ((this->move_dir_ && (this->current_pos_ >= this->target_pos_)) ||
         (!this->move_dir_ && (this->current_pos_ <= this->target_pos_))) {
+      ESP_LOGD(TAG, "Movement completed: reached target %.1f",
+               this->target_pos_);
       this->moving_ = false;
     } else {
       static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
       buf[2] = (this->move_dir_ ? 0x20 : 0x40);
       buf[3] = 0xff - buf[2];
+
+      ESP_LOGV(TAG, "Sending movement command: %02x %02x %02x %02x %02x",
+               buf[0], buf[1], buf[2], buf[3], buf[4]);
+
       this->desk_uart_->write_array(buf, 5);
     }
   }
@@ -151,6 +161,8 @@ void JSDrive::loop() {
       if (!this->moving_ && this->desk_uart_ != nullptr) {
         static uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons),
                                 0xff};
+        ESP_LOGV(TAG, "Forwarding remote buttons: %02x %02x %02x %02x %02x",
+                 buf[0], buf[1], buf[2], buf[3], buf[4]);
         this->desk_uart_->write_array(buf, 5);
       }
     }
@@ -170,13 +182,22 @@ void JSDrive::dump_config() {
 }
 
 void JSDrive::move_to(float height) {
-  if (this->desk_uart_ == nullptr)
+  ESP_LOGD(TAG, "move_to called: target=%.1f, current=%.1f", height,
+           this->current_pos_);
+
+  if (this->desk_uart_ == nullptr) {
+    ESP_LOGE(TAG, "move_to: desk_uart is null");
     return;
+  }
+
   this->moving_ = true;
   this->target_pos_ = height;
   this->move_dir_ = height > this->current_pos_;
   this->current_operation =
       this->move_dir_ ? JSDRIVE_OPERATION_RAISING : JSDRIVE_OPERATION_LOWERING;
+
+  ESP_LOGD(TAG, "Movement started: direction=%s, moving_=%d",
+           this->move_dir_ ? "UP" : "DOWN", this->moving_);
 }
 
 void JSDrive::stop() {
@@ -185,12 +206,20 @@ void JSDrive::stop() {
 }
 
 void JSDrive::simulate_button_press(uint8_t button_mask) {
-  if (this->desk_uart_ == nullptr)
+  ESP_LOGD(TAG, "simulate_button_press called with mask: 0x%02x", button_mask);
+
+  if (this->desk_uart_ == nullptr) {
+    ESP_LOGE(TAG, "simulate_button_press: desk_uart is null");
     return;
+  }
 
   static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
   buf[2] = button_mask;
   buf[3] = 0xff - button_mask;
+
+  ESP_LOGD(TAG, "Sending button command: %02x %02x %02x %02x %02x", buf[0],
+           buf[1], buf[2], buf[3], buf[4]);
+
   this->desk_uart_->write_array(buf, 5);
 
   if (this->up_bsensor_ != nullptr)
@@ -204,6 +233,5 @@ void JSDrive::simulate_button_press(uint8_t button_mask) {
   if (this->memory3_bsensor_ != nullptr)
     this->memory3_bsensor_->publish_state(button_mask & JSDRIVE_BUTTON_MEMORY3);
 }
-
 } // namespace jsdrive
 } // namespace esphome

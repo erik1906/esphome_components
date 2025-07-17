@@ -99,19 +99,19 @@ void JSDrive::loop() {
       this->current_pos_ = num;
     }
   }
-  /* if (this->moving_) { */
-  /*   if ((this->move_dir_ && (this->current_pos_ >= this->target_pos_)) || */
-  /*       (!this->move_dir_ && (this->current_pos_ <= this->target_pos_))) { */
-  /*     this->moving_ = false; */
-  /*   } else { */
-  /*     static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff}; */
-  /*     buf[2] = (this->move_dir_ ? 0x20 : 0x40); */
-  /*     buf[3] = 0xff - buf[2]; */
-  /*     this->desk_uart_->write_array(buf, 5); */
-  /*   } */
-  /* } */
+  if (this->moving_) {
+    if ((this->move_dir_ && (this->current_pos_ >= this->target_pos_)) ||
+        (!this->move_dir_ && (this->current_pos_ <= this->target_pos_))) {
+      this->moving_ = false;
+    } else {
+      static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
+      buf[2] = (this->move_dir_ ? 0x20 : 0x40);
+      buf[3] = 0xff - buf[2];
+      this->desk_uart_->write_array(buf, 5);
+    }
+  }
   uint8_t buttons = 0;
-  bool have_data_desk = false;
+  have_data = false;
   if (this->remote_uart_ != nullptr) {
     while (this->remote_uart_->available()) {
       this->remote_uart_->read_byte(&c);
@@ -132,11 +132,10 @@ void JSDrive::loop() {
         continue;
       }
       buttons = d[1];
-      have_data_desk = true;
+      have_data = true;
       this->rem_buffer_.clear();
-      this->rem_buffer_.resize(0);
     }
-    if (have_data_desk) {
+    if (have_data) {
       if (this->up_bsensor_ != nullptr)
         this->up_bsensor_->publish_state(buttons & 0x20);
       if (this->down_bsensor_ != nullptr)

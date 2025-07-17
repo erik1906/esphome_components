@@ -1,7 +1,7 @@
-#include "esphome/core/component.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/uart/uart.h"
+#include "esphome/core/component.h"
 
 namespace esphome {
 namespace jsdrive {
@@ -12,10 +12,18 @@ enum JSDriveOperation : uint8_t {
   JSDRIVE_OPERATION_LOWERING,
 };
 
+enum JSDriveButton : uint8_t {
+  JSDRIVE_BUTTON_MEMORY1 = 0x02,
+  JSDRIVE_BUTTON_MEMORY2 = 0x04,
+  JSDRIVE_BUTTON_MEMORY3 = 0x08,
+  JSDRIVE_BUTTON_UP = 0x20,
+  JSDRIVE_BUTTON_DOWN = 0x40,
+};
+
 const char *jsdrive_operation_to_str(JSDriveOperation op);
 
 class JSDrive : public Component {
- public:
+public:
   float get_setup_priority() const override { return setup_priority::LATE; }
   void loop() override;
   void dump_config() override;
@@ -23,18 +31,29 @@ class JSDrive : public Component {
   void set_desk_uart(uart::UARTComponent *uart) { this->desk_uart_ = uart; }
   void set_message_length(int length) { this->message_length_ = length; }
   void set_height_sensor(sensor::Sensor *sensor) { height_sensor_ = sensor; }
-  void set_up_bsensor(binary_sensor::BinarySensor *sensor) { up_bsensor_ = sensor; }
-  void set_down_bsensor(binary_sensor::BinarySensor *sensor) { down_bsensor_ = sensor; }
-  void set_memory1_bsensor(binary_sensor::BinarySensor *sensor) { memory1_bsensor_ = sensor; }
-  void set_memory2_bsensor(binary_sensor::BinarySensor *sensor) { memory2_bsensor_ = sensor; }
-  void set_memory3_bsensor(binary_sensor::BinarySensor *sensor) { memory3_bsensor_ = sensor; }
+  void set_up_bsensor(binary_sensor::BinarySensor *sensor) {
+    up_bsensor_ = sensor;
+  }
+  void set_down_bsensor(binary_sensor::BinarySensor *sensor) {
+    down_bsensor_ = sensor;
+  }
+  void set_memory1_bsensor(binary_sensor::BinarySensor *sensor) {
+    memory1_bsensor_ = sensor;
+  }
+  void set_memory2_bsensor(binary_sensor::BinarySensor *sensor) {
+    memory2_bsensor_ = sensor;
+  }
+  void set_memory3_bsensor(binary_sensor::BinarySensor *sensor) {
+    memory3_bsensor_ = sensor;
+  }
 
   void move_to(float height);
   void stop();
+  void simulate_button_press(uint8_t button_mask);
 
   JSDriveOperation current_operation{JSDRIVE_OPERATION_IDLE};
 
- protected:
+protected:
   uart::UARTComponent *remote_uart_{nullptr};
   uart::UARTComponent *desk_uart_{nullptr};
   int message_length_{6};
@@ -52,9 +71,9 @@ class JSDrive : public Component {
   float current_pos_{0};
   float target_pos_{-1};
   bool moving_{false};
-  bool move_dir_;  // true is up
+  bool move_dir_; // true is up
   uint32_t last_send_{0};
 };
 
-}  // namespace jsdrive
-}  // namespace esphome
+} // namespace jsdrive
+} // namespace esphome

@@ -111,15 +111,6 @@ void JSDrive::loop() {
       ESP_LOGD(TAG, "Movement completed: reached target %.1f",
                this->target_pos_);
       this->moving_ = false;
-    } else {
-      static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
-      buf[2] = (this->move_dir_ ? 0x20 : 0x40);
-      buf[3] = 0xff - buf[2];
-
-      ESP_LOGV(TAG, "Sending movement command: %02x %02x %02x %02x %02x",
-               buf[0], buf[1], buf[2], buf[3], buf[4]);
-
-      this->desk_uart_->write_array(buf, 5);
     }
   }
   uint8_t buttons = 0;
@@ -158,12 +149,12 @@ void JSDrive::loop() {
         this->memory2_bsensor_->publish_state(buttons & 4);
       if (this->memory3_bsensor_ != nullptr)
         this->memory3_bsensor_->publish_state(buttons & 8);
-      if (!this->moving_ && this->desk_uart_ != nullptr) {
+      if (this->desk_uart_ != nullptr) {
         static uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons),
                                 0xff};
         ESP_LOGV(TAG, "Forwarding remote buttons: %02x %02x %02x %02x %02x",
                  buf[0], buf[1], buf[2], buf[3], buf[4]);
-        // this->desk_uart_->write_array(buf, 5);
+        this->desk_uart_->write_array(buf, 5);
       }
     }
   }

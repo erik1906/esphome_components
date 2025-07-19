@@ -118,6 +118,11 @@ void JSDrive::loop() {
   if (this->remote_uart_ != nullptr) {
     while (this->remote_uart_->available()) {
       this->remote_uart_->read_byte(&c);
+      // Forward raw data immediately to desk
+      if (this->desk_uart_ != nullptr) {
+        this->desk_uart_->write_byte(c);
+      }
+
       if (!this->rem_rx_) {
         if (c == 0xa5)
           this->rem_rx_ = true;
@@ -149,12 +154,6 @@ void JSDrive::loop() {
         this->memory2_bsensor_->publish_state(buttons & 4);
       if (this->memory3_bsensor_ != nullptr)
         this->memory3_bsensor_->publish_state(buttons & 8);
-      if (this->desk_uart_ != nullptr) {
-        uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
-        ESP_LOGV(TAG, "Forwarding remote buttons: %02x %02x %02x %02x %02x",
-                 buf[0], buf[1], buf[2], buf[3], buf[4]);
-        this->desk_uart_->write_array(buf, 5);
-      }
     }
   }
 }

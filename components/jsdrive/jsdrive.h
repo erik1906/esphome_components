@@ -73,6 +73,7 @@ protected:
   bool moving_{false};
   bool move_dir_; // true is up
   uint32_t last_send_{0};
+  uint8_t last_buttons_{0};
 };
 
 } // namespace jsdrive

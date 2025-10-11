@@ -183,5 +183,29 @@ void JSDrive::stop() {
   this->current_operation = JSDRIVE_OPERATION_IDLE;
 }
 
+void JSDrive::press_preset1() {
+  if (this->desk_uart_ != nullptr) {
+    uint8_t buttons = 2;  // memory1 bit
+    uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
+    this->desk_uart_->write_array(buf, 5);
+  }
+}
+
+void JSDrive::press_preset2() {
+  if (this->desk_uart_ != nullptr) {
+    uint8_t buttons = 4;  // memory2 bit
+    uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
+    this->desk_uart_->write_array(buf, 5);
+  }
+}
+
+void JSDrive::press_preset3() {
+  if (this->desk_uart_ != nullptr) {
+    uint8_t buttons = 8;  // memory3 bit
+    uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
+    this->desk_uart_->write_array(buf, 5);
+  }
+}
+
 } // namespace jsdrive
 } // namespace esphome

@@ -33,6 +33,9 @@ class JSDrive : public Component {
 
   void move_to(float height);
   void stop();
+  void press_preset1();
+  void press_preset2();
+  void press_preset3();
 
   JSDriveOperation current_operation{JSDRIVE_OPERATION_IDLE};
 

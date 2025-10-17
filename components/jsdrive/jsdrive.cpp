@@ -170,7 +170,7 @@ void JSDrive::dump_config() {
   ESP_LOGCONFIG(TAG, "JSDrive Desk");
   if (this->desk_uart_ != nullptr)
     ESP_LOGCONFIG(TAG, "  Message Length: %d", this->message_length_);
-  LOG_PIN("  ", "Move Pin", this->move_pin_);
+  LOG_PIN("Move Pin", this->move_pin_);
   LOG_SENSOR("", "Height", this->height_sensor_);
   LOG_BINARY_SENSOR("  ", "Up", this->up_bsensor_);
   LOG_BINARY_SENSOR("  ", "Down", this->down_bsensor_);

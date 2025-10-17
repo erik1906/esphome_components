@@ -47,6 +47,12 @@ static int segs_to_num(uint8_t segments) {
   return -1;
 }
 
+void JSDrive::setup() {
+  if (this->move_pin_ != nullptr) {
+    this->move_pin_->setup();
+  }
+}
+
 void JSDrive::loop() {
   uint8_t c;
   bool have_data = false;
@@ -154,12 +160,17 @@ void JSDrive::loop() {
       }
     }
   }
+  if (this->move_pin_ != nullptr) {
+    bool pin_state = this->move_pin_->digital_read();
+    ESP_LOGI(TAG, "Move pin state: %s", pin_state ? "true" : "false");
+  }
 }
 
 void JSDrive::dump_config() {
   ESP_LOGCONFIG(TAG, "JSDrive Desk");
   if (this->desk_uart_ != nullptr)
     ESP_LOGCONFIG(TAG, "  Message Length: %d", this->message_length_);
+  LOG_PIN("  ", "Move Pin", this->move_pin_);
   LOG_SENSOR("", "Height", this->height_sensor_);
   LOG_BINARY_SENSOR("  ", "Up", this->up_bsensor_);
   LOG_BINARY_SENSOR("  ", "Down", this->down_bsensor_);

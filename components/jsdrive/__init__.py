@@ -1,6 +1,7 @@
 import esphome.codegen as cg
 import esphome.config_validation as cv
 from esphome.components import binary_sensor, sensor, uart
+from esphome import pins
 from esphome.const import CONF_ID, CONF_HEIGHT
 
 DEPENDENCIES = ['uart']
@@ -19,6 +20,7 @@ CONF_DOWN = "down"
 CONF_MEMORY1 = "memory1"
 CONF_MEMORY2 = "memory2"
 CONF_MEMORY3 = "memory3"
+CONF_MOVE_PIN = "move_pin"
 
 CONFIG_SCHEMA = cv.COMPONENT_SCHEMA.extend({
     cv.GenerateID(): cv.declare_id(JSDrive),
@@ -28,6 +30,7 @@ CONFIG_SCHEMA = cv.COMPONENT_SCHEMA.extend({
     cv.Optional(CONF_HEIGHT): sensor.sensor_schema(
         accuracy_decimals = 1
     ),
+    cv.Optional(CONF_MOVE_PIN): pins.gpio_input_pin_schema,
     cv.Optional(CONF_UP): binary_sensor.binary_sensor_schema(),
     cv.Optional(CONF_DOWN): binary_sensor.binary_sensor_schema(),
     cv.Optional(CONF_MEMORY1): binary_sensor.binary_sensor_schema(),
@@ -47,6 +50,9 @@ async def to_code(config):
         desk_uart = await cg.get_variable(config[CONF_DESK_UART])
         cg.add(var.set_desk_uart(desk_uart))
         cg.add(var.set_message_length(config[CONF_MESSAGE_LENGTH]))
+    if CONF_MOVE_PIN in config:
+        pin = await cg.gpio_pin_expression(config[CONF_MOVE_PIN])
+        cg.add(var.set_move_pin(pin))
     if CONF_HEIGHT in config:
         sens = await sensor.new_sensor(config[CONF_HEIGHT])
         cg.add(var.set_height_sensor(sens))

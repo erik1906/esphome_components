@@ -1,6 +1,7 @@
 #pragma once
 
 #include "esphome/core/component.h"
+#include "esphome/core/gpio.h"
 #include "esphome/components/binary_sensor/binary_sensor.h"
 #include "esphome/components/sensor/sensor.h"
 #include "esphome/components/uart/uart.h"
@@ -19,6 +20,7 @@ const char *jsdrive_operation_to_str(JSDriveOperation op);
 class JSDrive : public Component {
  public:
   float get_setup_priority() const override { return setup_priority::LATE; }
+  void setup() override;
   void loop() override;
   void dump_config() override;
   void set_remote_uart(uart::UARTComponent *uart) { this->remote_uart_ = uart; }
@@ -30,6 +32,7 @@ class JSDrive : public Component {
   void set_memory1_bsensor(binary_sensor::BinarySensor *sensor) { memory1_bsensor_ = sensor; }
   void set_memory2_bsensor(binary_sensor::BinarySensor *sensor) { memory2_bsensor_ = sensor; }
   void set_memory3_bsensor(binary_sensor::BinarySensor *sensor) { memory3_bsensor_ = sensor; }
+  void set_move_pin(GPIOPin* pin) { move_pin_ = pin; }
 
   void move_to(float height);
   void stop();
@@ -59,6 +62,7 @@ class JSDrive : public Component {
   bool moving_{false};
   bool move_dir_;  // true is up
   uint32_t last_send_{0};
+  GPIOPin* move_pin_{nullptr};
 };
 
 }  // namespace jsdrive

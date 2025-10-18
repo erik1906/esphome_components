@@ -32,8 +32,8 @@ class JSDrive : public Component {
   void set_memory1_bsensor(binary_sensor::BinarySensor *sensor) { memory1_bsensor_ = sensor; }
   void set_memory2_bsensor(binary_sensor::BinarySensor *sensor) { memory2_bsensor_ = sensor; }
    void set_memory3_bsensor(binary_sensor::BinarySensor *sensor) { memory3_bsensor_ = sensor; }
-   void set_move_pin(GPIOPin* pin) { move_pin_ = pin; }
-   void set_wake_pin(GPIOPin* pin) { wake_pin_ = pin; }
+    void set_remote_pin(GPIOPin* pin) { remote_pin_ = pin; }
+    void set_desk_pin(GPIOPin* pin) { desk_pin_ = pin; }
 
   void move_to(float height);
   void stop();
@@ -64,8 +64,9 @@ class JSDrive : public Component {
    bool moving_{false};
    bool move_dir_;  // true is up
    uint32_t last_send_{0};
-   GPIOPin* move_pin_{nullptr};
-   GPIOPin* wake_pin_{nullptr};
+    GPIOPin* remote_pin_{nullptr};
+    GPIOPin* desk_pin_{nullptr};
+    bool remote_pin_prev_{false};
 };
 
 }  // namespace jsdrive

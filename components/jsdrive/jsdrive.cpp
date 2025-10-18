@@ -145,6 +145,7 @@ void JSDrive::loop() {
         continue;
       }
       buttons = d[1];
+      ESP_LOGI(TAG, "Received buttons from remote: 0x%02X", buttons);
       have_data = true;
       this->rem_buffer_.clear();
     }
@@ -174,6 +175,7 @@ void JSDrive::loop() {
       }
     }
   }
+  ESP_LOGI(TAG, "Desk moving: %s", this->moving_ ? "yes" : "no");
 }
 
 void JSDrive::dump_config() {
@@ -206,26 +208,51 @@ void JSDrive::stop() {
 }
 
 void JSDrive::press_preset1() {
+  if (this->desk_pin_ != nullptr) {
+    this->desk_pin_->digital_write(true);
+  }
   if (this->desk_uart_ != nullptr) {
     uint8_t buttons = 2;
+    ESP_LOGI(TAG, "Sending preset1 to desk: buttons=0x%02X", buttons);
     uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
     this->desk_uart_->write_array(buf, 5);
+    delay(100);
+  }
+  if (this->desk_pin_ != nullptr) {
+    delay(100);
+    this->desk_pin_->digital_write(false);
   }
 }
 
 void JSDrive::press_preset2() {
+  if (this->desk_pin_ != nullptr) {
+    this->desk_pin_->digital_write(true);
+  }
   if (this->desk_uart_ != nullptr) {
     uint8_t buttons = 4;
+    ESP_LOGI(TAG, "Sending preset2 to desk: buttons=0x%02X", buttons);
     uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
     this->desk_uart_->write_array(buf, 5);
+  }
+  if (this->desk_pin_ != nullptr) {
+    delay(100);
+    this->desk_pin_->digital_write(false);
   }
 }
 
 void JSDrive::press_preset3() {
+  if (this->desk_pin_ != nullptr) {
+    this->desk_pin_->digital_write(true);
+  }
   if (this->desk_uart_ != nullptr) {
     uint8_t buttons = 8;
+    ESP_LOGI(TAG, "Sending preset3 to desk: buttons=0x%02X", buttons);
     uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
     this->desk_uart_->write_array(buf, 5);
+  }
+  if (this->desk_pin_ != nullptr) {
+    delay(100);
+    this->desk_pin_->digital_write(false);
   }
 }
 

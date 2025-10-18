@@ -31,14 +31,16 @@ class JSDrive : public Component {
   void set_down_bsensor(binary_sensor::BinarySensor *sensor) { down_bsensor_ = sensor; }
   void set_memory1_bsensor(binary_sensor::BinarySensor *sensor) { memory1_bsensor_ = sensor; }
   void set_memory2_bsensor(binary_sensor::BinarySensor *sensor) { memory2_bsensor_ = sensor; }
-  void set_memory3_bsensor(binary_sensor::BinarySensor *sensor) { memory3_bsensor_ = sensor; }
-  void set_move_pin(GPIOPin* pin) { move_pin_ = pin; }
+   void set_memory3_bsensor(binary_sensor::BinarySensor *sensor) { memory3_bsensor_ = sensor; }
+   void set_move_pin(GPIOPin* pin) { move_pin_ = pin; }
+   void set_wake_pin(GPIOPin* pin) { wake_pin_ = pin; }
 
   void move_to(float height);
   void stop();
-  void press_preset1();
-  void press_preset2();
-  void press_preset3();
+   void press_preset1();
+   void press_preset2();
+   void press_preset3();
+   void wake_desk();
 
   JSDriveOperation current_operation{JSDRIVE_OPERATION_IDLE};
 
@@ -59,10 +61,11 @@ class JSDrive : public Component {
   bool desk_rx_{false};
   float current_pos_{0};
   float target_pos_{-1};
-  bool moving_{false};
-  bool move_dir_;  // true is up
-  uint32_t last_send_{0};
-  GPIOPin* move_pin_{nullptr};
+   bool moving_{false};
+   bool move_dir_;  // true is up
+   uint32_t last_send_{0};
+   GPIOPin* move_pin_{nullptr};
+   GPIOPin* wake_pin_{nullptr};
 };
 
 }  // namespace jsdrive

@@ -21,6 +21,7 @@ CONF_MEMORY1 = "memory1"
 CONF_MEMORY2 = "memory2"
 CONF_MEMORY3 = "memory3"
 CONF_MOVE_PIN = "move_pin"
+CONF_WAKE_PIN = "wake_pin"
 
 CONFIG_SCHEMA = cv.COMPONENT_SCHEMA.extend({
     cv.GenerateID(): cv.declare_id(JSDrive),
@@ -31,6 +32,7 @@ CONFIG_SCHEMA = cv.COMPONENT_SCHEMA.extend({
         accuracy_decimals = 1
     ),
     cv.Optional(CONF_MOVE_PIN): pins.gpio_input_pin_schema,
+    cv.Optional(CONF_WAKE_PIN): pins.gpio_output_pin_schema,
     cv.Optional(CONF_UP): binary_sensor.binary_sensor_schema(),
     cv.Optional(CONF_DOWN): binary_sensor.binary_sensor_schema(),
     cv.Optional(CONF_MEMORY1): binary_sensor.binary_sensor_schema(),
@@ -53,6 +55,9 @@ async def to_code(config):
     if CONF_MOVE_PIN in config:
         pin = await cg.gpio_pin_expression(config[CONF_MOVE_PIN])
         cg.add(var.set_move_pin(pin))
+    if CONF_WAKE_PIN in config:
+        pin = await cg.gpio_pin_expression(config[CONF_WAKE_PIN])
+        cg.add(var.set_wake_pin(pin))
     if CONF_HEIGHT in config:
         sens = await sensor.new_sensor(config[CONF_HEIGHT])
         cg.add(var.set_height_sensor(sens))

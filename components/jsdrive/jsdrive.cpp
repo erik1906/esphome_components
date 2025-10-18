@@ -51,6 +51,10 @@ void JSDrive::setup() {
   if (this->move_pin_ != nullptr) {
     this->move_pin_->setup();
   }
+  if (this->wake_pin_ != nullptr) {
+    this->wake_pin_->setup();
+    this->wake_pin_->digital_write(false);  // Initialize LOW
+  }
 }
 
 void JSDrive::loop() {
@@ -162,7 +166,7 @@ void JSDrive::loop() {
   }
   if (this->move_pin_ != nullptr) {
     bool pin_state = this->move_pin_->digital_read();
-    ESP_LOGI(TAG, "Move pin state: %s", pin_state ? "true" : "false");
+    /*ESP_LOGI(TAG, "Move pin state: %s", pin_state ? "true" : "false");*/
   }
 }
 
@@ -171,6 +175,7 @@ void JSDrive::dump_config() {
   if (this->desk_uart_ != nullptr)
     ESP_LOGCONFIG(TAG, "  Message Length: %d", this->message_length_);
   LOG_PIN("Move Pin", this->move_pin_);
+  LOG_PIN("Wake Pin", this->wake_pin_);
   LOG_SENSOR("", "Height", this->height_sensor_);
   LOG_BINARY_SENSOR("  ", "Up", this->up_bsensor_);
   LOG_BINARY_SENSOR("  ", "Down", this->down_bsensor_);
@@ -215,6 +220,16 @@ void JSDrive::press_preset3() {
     uint8_t buttons = 8;  // memory3 bit
     uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
     this->desk_uart_->write_array(buf, 5);
+  }
+}
+
+void JSDrive::wake_desk() {
+  if (this->wake_pin_ != nullptr) {
+    ESP_LOGI(TAG, "Waking desk - setting wake pin HIGH");
+    this->wake_pin_->digital_write(true);
+    delay(100);  // Brief pulse
+    this->wake_pin_->digital_write(false);
+    ESP_LOGI(TAG, "Wake pulse complete - pin set LOW");
   }
 }
 

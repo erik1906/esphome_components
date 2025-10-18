@@ -42,7 +42,7 @@ static int segs_to_num(uint8_t segments) {
   case 0x6f:
     return 9;
   default:
-    ESP_LOGV(TAG, "unknown digit: %02f", segments & 0x7f);
+    /*ESP_LOGV(TAG, "unknown digit: %02f", segments & 0x7f);*/
   }
   return -1;
 }
@@ -175,7 +175,6 @@ void JSDrive::loop() {
       }
     }
   }
-  ESP_LOGI(TAG, "Desk moving: %s", this->moving_ ? "yes" : "no");
 }
 
 void JSDrive::dump_config() {

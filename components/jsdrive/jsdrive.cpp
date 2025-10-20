@@ -209,9 +209,7 @@ void JSDrive::press_preset1() {
     uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
     for (int i = 0; i < 10; i++) {
       this->desk_uart_->write_array(buf, 5);
-      delay(10);
     }
-    delay(100);
   }
 }
 
@@ -221,9 +219,7 @@ void JSDrive::press_preset2() {
     uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
     for (int i = 0; i < 10; i++) {
       this->desk_uart_->write_array(buf, 5);
-      delay(10);
     }
-    delay(100);
   }
 }
 
@@ -233,9 +229,7 @@ void JSDrive::press_preset3() {
     uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
     for (int i = 0; i < 10; i++) {
       this->desk_uart_->write_array(buf, 5);
-      delay(10);
     }
-    delay(100);
   }
 }
 

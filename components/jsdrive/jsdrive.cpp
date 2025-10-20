@@ -204,9 +204,6 @@ void JSDrive::stop() {
 }
 
 void JSDrive::press_preset1() {
-  if (this->desk_pin_ != nullptr) {
-    this->desk_pin_->digital_write(true);
-  }
   if (this->desk_uart_ != nullptr) {
     uint8_t buttons = 2;
     uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
@@ -216,16 +213,9 @@ void JSDrive::press_preset1() {
     }
     delay(100);
   }
-  if (this->desk_pin_ != nullptr) {
-    delay(100);
-    this->desk_pin_->digital_write(false);
-  }
 }
 
 void JSDrive::press_preset2() {
-  if (this->desk_pin_ != nullptr) {
-    this->desk_pin_->digital_write(true);
-  }
   if (this->desk_uart_ != nullptr) {
     uint8_t buttons = 4;
     uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
@@ -235,16 +225,9 @@ void JSDrive::press_preset2() {
     }
     delay(100);
   }
-  if (this->desk_pin_ != nullptr) {
-    delay(100);
-    this->desk_pin_->digital_write(false);
-  }
 }
 
 void JSDrive::press_preset3() {
-  if (this->desk_pin_ != nullptr) {
-    this->desk_pin_->digital_write(true);
-  }
   if (this->desk_uart_ != nullptr) {
     uint8_t buttons = 8;
     uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
@@ -253,10 +236,6 @@ void JSDrive::press_preset3() {
       delay(10);
     }
     delay(100);
-  }
-  if (this->desk_pin_ != nullptr) {
-    delay(100);
-    this->desk_pin_->digital_write(false);
   }
 }
 

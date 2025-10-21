@@ -191,6 +191,7 @@ void JSDrive::dump_config() {
 void JSDrive::move_to(float height) {
   if (this->desk_uart_ == nullptr)
     return;
+  this->wake_desk();
   this->moving_ = true;
   this->target_pos_ = height;
   this->move_dir_ = height > this->current_pos_;

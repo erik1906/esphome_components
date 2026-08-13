@@ -39,14 +39,17 @@ class JSDrive : public Component {
 
   void move_to(float height);
   void stop();
-   void press_preset1();
-   void press_preset2();
-   void press_preset3();
-   void wake_desk();
+  void press_preset1();
+  void press_preset2();
+  void press_preset3();
+  void press_preset4();
+  void wake_desk();
 
   JSDriveOperation current_operation{JSDRIVE_OPERATION_IDLE};
 
  protected:
+  void press_preset(uint8_t buttons);
+
   uart::UARTComponent *remote_uart_{nullptr};
   uart::UARTComponent *desk_uart_{nullptr};
   int message_length_{6};

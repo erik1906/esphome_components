@@ -233,29 +233,26 @@ void JSDrive::stop() {
 }
 
 void JSDrive::press_preset1() {
-  if (this->desk_uart_ != nullptr) {
-    uint8_t buttons = 2;
-    uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
-    for (int i = 0; i < 10; i++) {
-      this->desk_uart_->write_array(buf, 5);
-    }
-  }
+  this->press_preset(0x02);
 }
 
 void JSDrive::press_preset2() {
-  if (this->desk_uart_ != nullptr) {
-    uint8_t buttons = 4;
-    uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
-    for (int i = 0; i < 10; i++) {
-      this->desk_uart_->write_array(buf, 5);
-    }
-  }
+  this->press_preset(0x04);
 }
 
 void JSDrive::press_preset3() {
+  this->press_preset(0x08);
+}
+
+void JSDrive::press_preset4() {
+  this->press_preset(0x10);
+}
+
+void JSDrive::press_preset(uint8_t buttons) {
   if (this->desk_uart_ != nullptr) {
-    uint8_t buttons = 8;
     uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
+    ESP_LOGV(TAG, "simulating preset button: %02x", buttons);
+    this->wake_desk();
     for (int i = 0; i < 10; i++) {
       this->desk_uart_->write_array(buf, 5);
     }

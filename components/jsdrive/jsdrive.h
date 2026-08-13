@@ -59,6 +59,7 @@ class JSDrive : public Component {
   std::vector<uint8_t> desk_buffer_;
   bool rem_rx_{false};
   bool desk_rx_{false};
+  bool height_known_{false};
   float current_pos_{0};
   float target_pos_{-1};
    bool moving_{false};

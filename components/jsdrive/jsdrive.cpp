@@ -104,21 +104,27 @@ void JSDrive::loop() {
       } while (false);
       this->desk_buffer_.clear();
     }
-    if (have_data && (this->height_sensor_ != nullptr) &&
-        (this->current_pos_ != num)) {
-      this->height_sensor_->publish_state(num);
-      this->current_pos_ = num;
+    if (have_data) {
+      this->height_known_ = true;
+      if ((this->height_sensor_ != nullptr) && (this->current_pos_ != num))
+        this->height_sensor_->publish_state(num);
+      if (this->current_pos_ != num)
+        this->current_pos_ = num;
     }
   }
   if (this->moving_) {
     if ((this->move_dir_ && (this->current_pos_ >= this->target_pos_)) ||
         (!this->move_dir_ && (this->current_pos_ <= this->target_pos_))) {
+      uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
+      this->desk_uart_->write_array(buf, 5);
       this->moving_ = false;
-    } else {
+      this->current_operation = JSDRIVE_OPERATION_IDLE;
+    } else if (millis() - this->last_send_ >= 100) {
       static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
       buf[2] = (this->move_dir_ ? 0x20 : 0x40);
       buf[3] = 0xff - buf[2];
       this->desk_uart_->write_array(buf, 5);
+      this->last_send_ = millis();
     }
   }
   uint8_t buttons = 0;
@@ -189,12 +195,13 @@ void JSDrive::dump_config() {
 }
 
 void JSDrive::move_to(float height) {
-  if (this->desk_uart_ == nullptr)
+  if (this->desk_uart_ == nullptr || !this->height_known_)
     return;
   this->wake_desk();
   this->moving_ = true;
   this->target_pos_ = height;
   this->move_dir_ = height > this->current_pos_;
+  this->last_send_ = millis() - 100;
   this->current_operation =
       this->move_dir_ ? JSDRIVE_OPERATION_RAISING : JSDRIVE_OPERATION_LOWERING;
 }

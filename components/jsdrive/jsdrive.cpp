@@ -267,8 +267,8 @@ void JSDrive::press_preset(uint8_t buttons) {
     this->wake_desk();
     this->moving_ = false;
     this->current_operation = JSDRIVE_OPERATION_IDLE;
-    this->preset_buttons_ = buttons;
     this->preset_started_ = millis();
+    this->preset_buttons_ = buttons;
   }
 }
 

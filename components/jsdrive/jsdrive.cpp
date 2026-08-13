@@ -136,6 +136,10 @@ void JSDrive::loop() {
       ESP_LOGV(TAG, "releasing preset button: %02x", this->preset_buttons_);
       this->desk_uart_->write_array(buf, 5);
       this->preset_buttons_ = 0;
+      if (this->desk_pin_ != nullptr) {
+        ESP_LOGV(TAG, "desk wake pin set: low");
+        this->desk_pin_->digital_write(false);
+      }
     } else {
       uint8_t buf[] = {0xa5, 0, this->preset_buttons_,
                        (uint8_t) (0xff - this->preset_buttons_), 0xff};
@@ -264,7 +268,10 @@ void JSDrive::press_preset4() {
 void JSDrive::press_preset(uint8_t buttons) {
   if (this->desk_uart_ != nullptr) {
     ESP_LOGV(TAG, "simulating preset button: %02x", buttons);
-    this->wake_desk();
+    if (this->desk_pin_ != nullptr) {
+      ESP_LOGV(TAG, "desk wake pin set: high");
+      this->desk_pin_->digital_write(true);
+    }
     this->moving_ = false;
     this->current_operation = JSDRIVE_OPERATION_IDLE;
     this->preset_started_ = millis();

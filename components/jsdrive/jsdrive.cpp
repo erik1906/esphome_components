@@ -152,6 +152,11 @@ void JSDrive::loop() {
         continue;
       }
       buttons = d[1];
+      if (!this->buttons_logged_ || buttons != this->last_logged_buttons_) {
+        ESP_LOGV(TAG, "remote buttons: %02x", buttons);
+        this->last_logged_buttons_ = buttons;
+        this->buttons_logged_ = true;
+      }
       have_data = true;
       this->rem_buffer_.clear();
     }

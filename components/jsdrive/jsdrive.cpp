@@ -84,13 +84,6 @@ void JSDrive::loop() {
         this->desk_buffer_.clear();
         continue;
       }
-      if (this->message_length_ == 5) {
-        ESP_LOGVV(TAG, "desk frame: 5a %02x %02x %02x %02x", d[0], d[1],
-                  d[2], d[3]);
-      } else {
-        ESP_LOGVV(TAG, "desk frame: 5a %02x %02x %02x %02x %02x", d[0],
-                  d[1], d[2], d[3], d[4]);
-      }
       do {
         if ((this->message_length_ == 6) && (d[3] != 1)) {
           ESP_LOGV(TAG, "unknown message type %02x", d[3]);
@@ -129,15 +122,11 @@ void JSDrive::loop() {
       this->desk_uart_->write_array(buf, 5);
       this->moving_ = false;
       this->current_operation = JSDRIVE_OPERATION_IDLE;
-    } else if (millis() - this->last_send_ >= 100) {
+    } else {
       static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
       buf[2] = (this->move_dir_ ? 0x20 : 0x40);
       buf[3] = 0xff - buf[2];
-      ESP_LOGV(TAG, "move %s: current %.1f, target %.1f; sending %02x",
-               this->move_dir_ ? "up" : "down", this->current_pos_,
-               this->target_pos_, buf[2]);
       this->desk_uart_->write_array(buf, 5);
-      this->last_send_ = millis();
     }
   }
   uint8_t buttons = 0;
@@ -178,7 +167,6 @@ void JSDrive::loop() {
         this->memory3_bsensor_->publish_state(buttons & 8);
       if (!this->moving_ && this->desk_uart_ != nullptr) {
         uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
-        ESP_LOGV(TAG, "forwarding remote buttons: %02x", buttons);
         this->desk_uart_->write_array(buf, 5);
       }
     }
@@ -223,7 +211,6 @@ void JSDrive::move_to(float height) {
   this->moving_ = true;
   this->target_pos_ = height;
   this->move_dir_ = height > this->current_pos_;
-  this->last_send_ = millis() - 100;
   this->current_operation =
       this->move_dir_ ? JSDRIVE_OPERATION_RAISING : JSDRIVE_OPERATION_LOWERING;
   ESP_LOGV(TAG, "starting move %s: current %.1f, target %.1f",

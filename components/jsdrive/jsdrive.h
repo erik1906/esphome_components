@@ -64,7 +64,6 @@ class JSDrive : public Component {
   float target_pos_{-1};
   bool moving_{false};
   bool move_dir_;  // true is up
-  uint32_t last_send_{0};
   GPIOPin* remote_pin_{nullptr};
   GPIOPin* desk_pin_{nullptr};
   bool remote_pin_prev_{false};

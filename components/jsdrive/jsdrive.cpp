@@ -84,6 +84,13 @@ void JSDrive::loop() {
         this->desk_buffer_.clear();
         continue;
       }
+      if (this->message_length_ == 5) {
+        ESP_LOGVV(TAG, "desk frame: 5a %02x %02x %02x %02x", d[0], d[1],
+                  d[2], d[3]);
+      } else {
+        ESP_LOGVV(TAG, "desk frame: 5a %02x %02x %02x %02x %02x", d[0],
+                  d[1], d[2], d[3], d[4]);
+      }
       do {
         if ((this->message_length_ == 6) && (d[3] != 1)) {
           ESP_LOGV(TAG, "unknown message type %02x", d[3]);
@@ -106,6 +113,7 @@ void JSDrive::loop() {
     }
     if (have_data) {
       this->height_known_ = true;
+      ESP_LOGV(TAG, "desk height: %.1f", num);
       if ((this->height_sensor_ != nullptr) && (this->current_pos_ != num))
         this->height_sensor_->publish_state(num);
       if (this->current_pos_ != num)
@@ -116,6 +124,8 @@ void JSDrive::loop() {
     if ((this->move_dir_ && (this->current_pos_ >= this->target_pos_)) ||
         (!this->move_dir_ && (this->current_pos_ <= this->target_pos_))) {
       uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
+      ESP_LOGV(TAG, "move target %.1f reached at %.1f; sending release",
+               this->target_pos_, this->current_pos_);
       this->desk_uart_->write_array(buf, 5);
       this->moving_ = false;
       this->current_operation = JSDRIVE_OPERATION_IDLE;
@@ -123,6 +133,9 @@ void JSDrive::loop() {
       static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
       buf[2] = (this->move_dir_ ? 0x20 : 0x40);
       buf[3] = 0xff - buf[2];
+      ESP_LOGV(TAG, "move %s: current %.1f, target %.1f; sending %02x",
+               this->move_dir_ ? "up" : "down", this->current_pos_,
+               this->target_pos_, buf[2]);
       this->desk_uart_->write_array(buf, 5);
       this->last_send_ = millis();
     }
@@ -148,7 +161,10 @@ void JSDrive::loop() {
         this->rem_buffer_.clear();
         continue;
       }
+      ESP_LOGVV(TAG, "remote frame: a5 %02x %02x %02x %02x", d[0], d[1],
+                d[2], d[3]);
       buttons = d[1];
+      ESP_LOGV(TAG, "remote buttons: %02x", buttons);
       have_data = true;
       this->rem_buffer_.clear();
     }
@@ -165,6 +181,7 @@ void JSDrive::loop() {
         this->memory3_bsensor_->publish_state(buttons & 8);
       if (!this->moving_ && this->desk_uart_ != nullptr) {
         uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
+        ESP_LOGV(TAG, "forwarding remote buttons: %02x", buttons);
         this->desk_uart_->write_array(buf, 5);
       }
     }
@@ -173,7 +190,9 @@ void JSDrive::loop() {
     bool pin_state = this->remote_pin_->digital_read();
     if (pin_state != this->remote_pin_prev_) {
       this->remote_pin_prev_ = pin_state;
+      ESP_LOGV(TAG, "remote wake pin changed: %s", pin_state ? "high" : "low");
       if (this->desk_pin_ != nullptr) {
+        ESP_LOGV(TAG, "desk wake pin set: %s", pin_state ? "high" : "low");
         this->desk_pin_->digital_write(pin_state);
       }
     }
@@ -195,8 +214,14 @@ void JSDrive::dump_config() {
 }
 
 void JSDrive::move_to(float height) {
-  if (this->desk_uart_ == nullptr || !this->height_known_)
+  if (this->desk_uart_ == nullptr) {
+    ESP_LOGW(TAG, "ignoring move to %.1f: desk UART unavailable", height);
     return;
+  }
+  if (!this->height_known_) {
+    ESP_LOGW(TAG, "ignoring move to %.1f: no valid desk height received", height);
+    return;
+  }
   this->wake_desk();
   this->moving_ = true;
   this->target_pos_ = height;
@@ -204,9 +229,12 @@ void JSDrive::move_to(float height) {
   this->last_send_ = millis() - 100;
   this->current_operation =
       this->move_dir_ ? JSDRIVE_OPERATION_RAISING : JSDRIVE_OPERATION_LOWERING;
+  ESP_LOGV(TAG, "starting move %s: current %.1f, target %.1f",
+           this->move_dir_ ? "up" : "down", this->current_pos_, height);
 }
 
 void JSDrive::stop() {
+  ESP_LOGV(TAG, "stopping move at %.1f", this->current_pos_);
   this->moving_ = false;
   this->current_operation = JSDRIVE_OPERATION_IDLE;
 }
@@ -243,6 +271,7 @@ void JSDrive::press_preset3() {
 
 void JSDrive::wake_desk() {
   if (this->desk_pin_ != nullptr) {
+    ESP_LOGV(TAG, "pulsing desk wake pin");
     this->desk_pin_->digital_write(true);
     delay(10);  // Brief pulse
     this->desk_pin_->digital_write(false);

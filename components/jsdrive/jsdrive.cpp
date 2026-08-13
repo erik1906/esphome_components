@@ -130,6 +130,18 @@ void JSDrive::loop() {
       this->desk_uart_->write_array(buf, 5);
     }
   }
+  if (this->preset_buttons_ != 0) {
+    if (millis() - this->preset_started_ >= JSDRIVE_PRESET_HOLD_TIME) {
+      uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
+      ESP_LOGV(TAG, "releasing preset button: %02x", this->preset_buttons_);
+      this->desk_uart_->write_array(buf, 5);
+      this->preset_buttons_ = 0;
+    } else {
+      uint8_t buf[] = {0xa5, 0, this->preset_buttons_,
+                       (uint8_t) (0xff - this->preset_buttons_), 0xff};
+      this->desk_uart_->write_array(buf, 5);
+    }
+  }
   uint8_t buttons = 0;
   have_data = false;
   if (this->remote_uart_ != nullptr) {
@@ -171,7 +183,8 @@ void JSDrive::loop() {
         this->memory2_bsensor_->publish_state(buttons & 4);
       if (this->memory3_bsensor_ != nullptr)
         this->memory3_bsensor_->publish_state(buttons & 8);
-      if (!this->moving_ && this->desk_uart_ != nullptr) {
+      if (!this->moving_ && this->preset_buttons_ == 0 &&
+          this->desk_uart_ != nullptr) {
         uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
         this->desk_uart_->write_array(buf, 5);
       }
@@ -250,12 +263,12 @@ void JSDrive::press_preset4() {
 
 void JSDrive::press_preset(uint8_t buttons) {
   if (this->desk_uart_ != nullptr) {
-    uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
     ESP_LOGV(TAG, "simulating preset button: %02x", buttons);
     this->wake_desk();
-    for (int i = 0; i < 10; i++) {
-      this->desk_uart_->write_array(buf, 5);
-    }
+    this->moving_ = false;
+    this->current_operation = JSDRIVE_OPERATION_IDLE;
+    this->preset_buttons_ = buttons;
+    this->preset_started_ = millis();
   }
 }
 

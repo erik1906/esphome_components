@@ -10,6 +10,7 @@ namespace esphome {
 namespace jsdrive {
 
 static constexpr float JSDRIVE_BRAKING_MARGIN = 2.0f;
+static constexpr uint32_t JSDRIVE_PRESET_HOLD_TIME = 300;
 
 enum JSDriveOperation : uint8_t {
   JSDRIVE_OPERATION_IDLE = 0,
@@ -70,6 +71,8 @@ class JSDrive : public Component {
   float stop_pos_{-1};
   bool moving_{false};
   bool move_dir_;  // true is up
+  uint8_t preset_buttons_{0};
+  uint32_t preset_started_{0};
   uint8_t last_logged_buttons_{0};
   bool buttons_logged_{false};
   GPIOPin* remote_pin_{nullptr};

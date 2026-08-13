@@ -46,7 +46,7 @@ static int segs_to_num(uint8_t segments) {
 }
 
 void JSDrive::setup() {
-  if (this->remote_pin_ != nullptr && this->preset_buttons_ == 0) {
+  if (this->remote_pin_ != nullptr) {
     this->remote_pin_->setup();
     this->remote_pin_prev_ = this->remote_pin_->digital_read();
   }
@@ -202,7 +202,7 @@ void JSDrive::loop() {
       }
     }
   }
-  if (this->remote_pin_ != nullptr) {
+  if (this->remote_pin_ != nullptr && this->preset_buttons_ == 0) {
     bool pin_state = this->remote_pin_->digital_read();
     if (pin_state != this->remote_pin_prev_) {
       this->remote_pin_prev_ = pin_state;

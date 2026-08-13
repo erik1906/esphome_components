@@ -161,10 +161,7 @@ void JSDrive::loop() {
         this->rem_buffer_.clear();
         continue;
       }
-      ESP_LOGVV(TAG, "remote frame: a5 %02x %02x %02x %02x", d[0], d[1],
-                d[2], d[3]);
       buttons = d[1];
-      ESP_LOGV(TAG, "remote buttons: %02x", buttons);
       have_data = true;
       this->rem_buffer_.clear();
     }
@@ -179,10 +176,17 @@ void JSDrive::loop() {
         this->memory2_bsensor_->publish_state(buttons & 4);
       if (this->memory3_bsensor_ != nullptr)
         this->memory3_bsensor_->publish_state(buttons & 8);
-      if (!this->moving_ && this->desk_uart_ != nullptr) {
+      bool buttons_changed = !this->remote_buttons_known_ ||
+                             buttons != this->last_remote_buttons_;
+      if (!this->moving_ && this->desk_uart_ != nullptr &&
+          (buttons_changed ||
+           (buttons != 0 && millis() - this->last_remote_send_ >= 100))) {
         uint8_t buf[] = {0xa5, 0, buttons, (uint8_t)(0xff - buttons), 0xff};
         ESP_LOGV(TAG, "forwarding remote buttons: %02x", buttons);
         this->desk_uart_->write_array(buf, 5);
+        this->last_remote_buttons_ = buttons;
+        this->remote_buttons_known_ = true;
+        this->last_remote_send_ = millis();
       }
     }
   }

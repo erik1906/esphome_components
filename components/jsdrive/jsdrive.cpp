@@ -106,18 +106,19 @@ void JSDrive::loop() {
     }
     if (have_data) {
       this->height_known_ = true;
-      ESP_LOGV(TAG, "desk height: %.1f", num);
-      if ((this->height_sensor_ != nullptr) && (this->current_pos_ != num))
-        this->height_sensor_->publish_state(num);
-      if (this->current_pos_ != num)
+      if (this->current_pos_ != num) {
+        ESP_LOGV(TAG, "desk height: %.1f", num);
+        if (this->height_sensor_ != nullptr)
+          this->height_sensor_->publish_state(num);
         this->current_pos_ = num;
+      }
     }
   }
   if (this->moving_) {
-    if ((this->move_dir_ && (this->current_pos_ >= this->target_pos_)) ||
-        (!this->move_dir_ && (this->current_pos_ <= this->target_pos_))) {
+    if ((this->move_dir_ && (this->current_pos_ >= this->stop_pos_)) ||
+        (!this->move_dir_ && (this->current_pos_ <= this->stop_pos_))) {
       uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
-      ESP_LOGV(TAG, "move target %.1f reached at %.1f; sending release",
+      ESP_LOGV(TAG, "move target %.1f braking at %.1f; sending release",
                this->target_pos_, this->current_pos_);
       this->desk_uart_->write_array(buf, 5);
       this->moving_ = false;
@@ -211,10 +212,13 @@ void JSDrive::move_to(float height) {
   this->moving_ = true;
   this->target_pos_ = height;
   this->move_dir_ = height > this->current_pos_;
+  this->stop_pos_ = this->move_dir_ ? height - JSDRIVE_BRAKING_MARGIN
+                                    : height + JSDRIVE_BRAKING_MARGIN;
   this->current_operation =
       this->move_dir_ ? JSDRIVE_OPERATION_RAISING : JSDRIVE_OPERATION_LOWERING;
-  ESP_LOGV(TAG, "starting move %s: current %.1f, target %.1f",
-           this->move_dir_ ? "up" : "down", this->current_pos_, height);
+  ESP_LOGV(TAG, "starting move %s: current %.1f, target %.1f, brake %.1f",
+           this->move_dir_ ? "up" : "down", this->current_pos_, height,
+           this->stop_pos_);
 }
 
 void JSDrive::stop() {

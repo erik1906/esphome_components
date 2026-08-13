@@ -9,6 +9,8 @@
 namespace esphome {
 namespace jsdrive {
 
+static constexpr float JSDRIVE_BRAKING_MARGIN = 2.0f;
+
 enum JSDriveOperation : uint8_t {
   JSDRIVE_OPERATION_IDLE = 0,
   JSDRIVE_OPERATION_RAISING,
@@ -62,6 +64,7 @@ class JSDrive : public Component {
   bool height_known_{false};
   float current_pos_{0};
   float target_pos_{-1};
+  float stop_pos_{-1};
   bool moving_{false};
   bool move_dir_;  // true is up
   GPIOPin* remote_pin_{nullptr};

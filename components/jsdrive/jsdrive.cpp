@@ -157,17 +157,11 @@ void JSDrive::loop() {
       this->preset_waking_ = false;
       if (this->desk_pin_ != nullptr)
         this->desk_pin_->digital_write(false);
-    } else if (this->preset_waking_ &&
-               millis() - this->preset_last_send_ >= JSDRIVE_PRESET_SEND_INTERVAL) {
+    } else if (this->preset_waking_ && this->preset_send_count_ == 0) {
       uint8_t buf[] = {0xa5, 0, 0x20, 0xdf, 0xff};
       this->desk_uart_->write_array(buf, 5);
       this->preset_last_send_ = millis();
       this->preset_send_count_++;
-      if (millis() - this->preset_last_log_ >= 250) {
-        ESP_LOGV(TAG, "preset %02x: waking for %u ms, %u frames sent",
-                 this->preset_buttons_, (unsigned) elapsed, this->preset_send_count_);
-        this->preset_last_log_ = millis();
-      }
     } else if (this->preset_waiting_ && !this->preset_rearmed_ &&
                elapsed >= JSDRIVE_PRESET_REARM_TIME) {
       ESP_LOGV(TAG, "preset %02x: rearming wake pin after %u ms",
@@ -345,7 +339,6 @@ void JSDrive::press_preset(uint8_t buttons) {
     this->preset_rearmed_ = false;
     this->preset_pressing_ = false;
     this->preset_last_send_ = this->preset_started_ - JSDRIVE_PRESET_SEND_INTERVAL;
-    this->preset_last_log_ = this->preset_started_ - 250;
     this->preset_send_count_ = 0;
   }
 }

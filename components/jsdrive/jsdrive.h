@@ -10,9 +10,8 @@ namespace esphome {
 namespace jsdrive {
 
 static constexpr float JSDRIVE_BRAKING_MARGIN = 2.0f;
-static constexpr uint32_t JSDRIVE_PRESET_WAKE_TIME = 0;
-// Desk first responds about 750 ms after physical controller wakes it.
-static constexpr uint32_t JSDRIVE_PRESET_HOLD_TIME = 1500;
+static constexpr uint32_t JSDRIVE_PRESET_WAKE_TIMEOUT = 1500;
+static constexpr uint32_t JSDRIVE_PRESET_HOLD_TIME = 300;
 static constexpr uint32_t JSDRIVE_PRESET_SEND_INTERVAL = 10;
 
 enum JSDriveOperation : uint8_t {
@@ -74,6 +73,7 @@ class JSDrive : public Component {
   bool moving_{false};
   bool move_dir_;  // true is up
   uint8_t preset_buttons_{0};
+  bool preset_waking_{false};
   bool preset_pressing_{false};
   uint32_t preset_started_{0};
   uint32_t preset_last_send_{0};

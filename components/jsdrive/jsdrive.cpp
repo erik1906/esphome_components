@@ -112,19 +112,28 @@ void JSDrive::loop() {
           this->height_sensor_->publish_state(num);
         this->current_pos_ = num;
       }
+      if (this->preset_waking_) {
+        uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
+        ESP_LOGV(TAG, "desk awake; pressing preset button: %02x", this->preset_buttons_);
+        this->desk_uart_->write_array(buf, 5);
+        this->preset_waking_ = false;
+        this->preset_pressing_ = true;
+        this->preset_started_ = millis();
+        this->preset_last_send_ = this->preset_started_ - JSDRIVE_PRESET_SEND_INTERVAL;
+      }
     }
   }
   if (this->moving_) {
     if ((this->move_dir_ && (this->current_pos_ >= this->stop_pos_)) ||
         (!this->move_dir_ && (this->current_pos_ <= this->stop_pos_))) {
-      uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
+      uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
       ESP_LOGV(TAG, "move target %.1f braking at %.1f; sending release",
                this->target_pos_, this->current_pos_);
       this->desk_uart_->write_array(buf, 5);
       this->moving_ = false;
       this->current_operation = JSDRIVE_OPERATION_IDLE;
     } else {
-      static uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
+      static uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
       buf[2] = (this->move_dir_ ? 0x20 : 0x40);
       buf[3] = 0xff - buf[2];
       this->desk_uart_->write_array(buf, 5);
@@ -132,13 +141,21 @@ void JSDrive::loop() {
   }
   if (this->preset_buttons_ != 0) {
     uint32_t elapsed = millis() - this->preset_started_;
-    if (!this->preset_pressing_ && elapsed >= JSDRIVE_PRESET_WAKE_TIME) {
-      ESP_LOGV(TAG, "pressing preset button: %02x", this->preset_buttons_);
-      this->preset_pressing_ = true;
-    }
-    if (this->preset_pressing_ &&
-        elapsed >= JSDRIVE_PRESET_WAKE_TIME + JSDRIVE_PRESET_HOLD_TIME) {
-      uint8_t buf[] = {0xa5, 0, 0, 0, 0xff};
+    if (this->preset_waking_ && elapsed >= JSDRIVE_PRESET_WAKE_TIMEOUT) {
+      uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
+      ESP_LOGW(TAG, "preset wake timed out; sending release");
+      this->desk_uart_->write_array(buf, 5);
+      this->preset_buttons_ = 0;
+      this->preset_waking_ = false;
+      if (this->desk_pin_ != nullptr)
+        this->desk_pin_->digital_write(false);
+    } else if (this->preset_waking_ &&
+               millis() - this->preset_last_send_ >= JSDRIVE_PRESET_SEND_INTERVAL) {
+      uint8_t buf[] = {0xa5, 0, 0x20, 0xdf, 0xff};
+      this->desk_uart_->write_array(buf, 5);
+      this->preset_last_send_ = millis();
+    } else if (this->preset_pressing_ && elapsed >= JSDRIVE_PRESET_HOLD_TIME) {
+      uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
       ESP_LOGV(TAG, "releasing preset button: %02x", this->preset_buttons_);
       this->desk_uart_->write_array(buf, 5);
       this->preset_buttons_ = 0;
@@ -285,6 +302,7 @@ void JSDrive::press_preset(uint8_t buttons) {
     this->current_operation = JSDRIVE_OPERATION_IDLE;
     this->preset_started_ = millis();
     this->preset_buttons_ = buttons;
+    this->preset_waking_ = true;
     this->preset_pressing_ = false;
     this->preset_last_send_ = this->preset_started_ - JSDRIVE_PRESET_SEND_INTERVAL;
   }

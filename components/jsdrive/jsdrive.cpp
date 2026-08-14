@@ -112,6 +112,8 @@ void JSDrive::loop() {
           this->height_sensor_->publish_state(num);
         this->current_pos_ = num;
       }
+      if (this->wake_test_active_)
+        this->end_wake_test("desk responded");
       if (this->preset_waking_) {
         uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
         ESP_LOGV(TAG, "preset %02x: desk awake after %u ms and %u wake frames",
@@ -172,6 +174,15 @@ void JSDrive::loop() {
         this->desk_uart_->write_array(buf, 5);
         this->move_last_send_ = millis();
       }
+    }
+  }
+  if (this->wake_test_active_) {
+    if (millis() - this->wake_test_started_ >= this->wake_test_duration_) {
+      this->end_wake_test("timed out");
+    } else if (millis() - this->wake_test_last_send_ >= JSDRIVE_WAKE_TEST_SEND_INTERVAL) {
+      uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
+      this->desk_uart_->write_array(buf, 5);
+      this->wake_test_last_send_ = millis();
     }
   }
   if (this->preset_buttons_ != 0) {
@@ -274,6 +285,8 @@ void JSDrive::loop() {
       this->rem_buffer_.clear();
     }
     if (have_data) {
+      if (this->wake_test_active_)
+        this->end_wake_test("physical controller pressed");
       if (this->up_bsensor_ != nullptr)
         this->up_bsensor_->publish_state(buttons & 0x20);
       if (this->down_bsensor_ != nullptr)
@@ -343,7 +356,9 @@ void JSDrive::move_to(float height) {
 
 void JSDrive::stop() {
   ESP_LOGV(TAG, "stopping move at %.1f", this->current_pos_);
-  if (this->desk_uart_ != nullptr) {
+  if (this->wake_test_active_)
+    this->end_wake_test("stopped");
+  else if (this->desk_uart_ != nullptr) {
     uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
     this->desk_uart_->write_array(buf, 5);
   }
@@ -370,6 +385,8 @@ void JSDrive::press_preset4() {
 
 void JSDrive::press_preset(uint8_t buttons) {
   if (this->desk_uart_ != nullptr) {
+    if (this->wake_test_active_)
+      this->end_wake_test("preset requested");
     ESP_LOGV(TAG, "preset %02x: starting wake sequence", buttons);
     if (this->desk_pin_ != nullptr) {
       ESP_LOGV(TAG, "desk wake pin set: high");
@@ -387,6 +404,34 @@ void JSDrive::press_preset(uint8_t buttons) {
     this->preset_last_send_ = this->preset_started_ - JSDRIVE_PRESET_SEND_INTERVAL;
     this->preset_send_count_ = 0;
   }
+}
+
+void JSDrive::wake_desk_for(uint32_t duration_ms) {
+  if (this->desk_uart_ == nullptr || this->desk_pin_ == nullptr) {
+    ESP_LOGW(TAG, "ignoring wake test: desk UART or wake pin unavailable");
+    return;
+  }
+  if (this->moving_ || this->preset_buttons_ != 0 || this->wake_test_active_) {
+    ESP_LOGW(TAG, "ignoring wake test: desk operation already active");
+    return;
+  }
+  ESP_LOGV(TAG, "starting desk wake test for %u ms", (unsigned) duration_ms);
+  this->wake_test_active_ = true;
+  this->wake_test_started_ = millis();
+  this->wake_test_duration_ = duration_ms;
+  this->wake_test_last_send_ = this->wake_test_started_ - JSDRIVE_WAKE_TEST_SEND_INTERVAL;
+  this->desk_pin_->digital_write(true);
+}
+
+void JSDrive::end_wake_test(const char *reason) {
+  if (!this->wake_test_active_)
+    return;
+  uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
+  this->desk_uart_->write_array(buf, 5);
+  this->desk_pin_->digital_write(false);
+  ESP_LOGV(TAG, "desk wake test %s after %u ms", reason,
+           (unsigned) (millis() - this->wake_test_started_));
+  this->wake_test_active_ = false;
 }
 
 } // namespace jsdrive

@@ -13,6 +13,7 @@ static constexpr float JSDRIVE_BRAKING_MARGIN = 2.0f;
 static constexpr float JSDRIVE_MOVE_TOLERANCE = 0.2f;
 static constexpr uint32_t JSDRIVE_MOVE_SETTLE_TIME = 500;
 static constexpr uint32_t JSDRIVE_MOVE_SEND_INTERVAL = 10;
+static constexpr uint32_t JSDRIVE_WAKE_TEST_SEND_INTERVAL = 10;
 static constexpr uint32_t JSDRIVE_PRESET_WAKE_TIMEOUT = 1500;
 static constexpr uint32_t JSDRIVE_PRESET_WAKE_LEAD_TIME = 25;
 static constexpr uint32_t JSDRIVE_PRESET_WAKE_PULSE_TIME = 120;
@@ -53,11 +54,13 @@ class JSDrive : public Component {
   void press_preset2();
   void press_preset3();
   void press_preset4();
+  void wake_desk_for(uint32_t duration_ms);
 
   JSDriveOperation current_operation{JSDRIVE_OPERATION_IDLE};
 
  protected:
   void press_preset(uint8_t buttons);
+  void end_wake_test(const char *reason);
 
   uart::UARTComponent *remote_uart_{nullptr};
   uart::UARTComponent *desk_uart_{nullptr};
@@ -82,6 +85,10 @@ class JSDrive : public Component {
   bool move_dir_;  // true is up
   uint32_t move_settled_at_{0};
   uint32_t move_last_send_{0};
+  bool wake_test_active_{false};
+  uint32_t wake_test_started_{0};
+  uint32_t wake_test_duration_{0};
+  uint32_t wake_test_last_send_{0};
   uint8_t preset_buttons_{0};
   bool preset_waking_{false};
   bool preset_wake_pin_low_{false};

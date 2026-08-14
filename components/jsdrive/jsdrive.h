@@ -12,6 +12,7 @@ namespace jsdrive {
 static constexpr float JSDRIVE_BRAKING_MARGIN = 2.0f;
 static constexpr uint32_t JSDRIVE_PRESET_WAKE_TIMEOUT = 1500;
 static constexpr uint32_t JSDRIVE_PRESET_WAKE_LEAD_TIME = 25;
+static constexpr uint32_t JSDRIVE_PRESET_WAKE_PULSE_TIME = 120;
 static constexpr uint32_t JSDRIVE_PRESET_REARM_TIME = 50;
 static constexpr uint32_t JSDRIVE_PRESET_SETTLE_TIME = 500;
 static constexpr uint32_t JSDRIVE_PRESET_HOLD_TIME = 300;
@@ -77,6 +78,7 @@ class JSDrive : public Component {
   bool move_dir_;  // true is up
   uint8_t preset_buttons_{0};
   bool preset_waking_{false};
+  bool preset_wake_pin_low_{false};
   bool preset_waiting_{false};
   bool preset_rearmed_{false};
   bool preset_pressing_{false};

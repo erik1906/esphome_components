@@ -148,7 +148,14 @@ void JSDrive::loop() {
   }
   if (this->preset_buttons_ != 0) {
     uint32_t elapsed = millis() - this->preset_started_;
-    if (this->preset_waking_ && elapsed >= JSDRIVE_PRESET_WAKE_TIMEOUT) {
+    if (this->preset_waking_ && !this->preset_wake_pin_low_ &&
+        elapsed >= JSDRIVE_PRESET_WAKE_PULSE_TIME) {
+      ESP_LOGV(TAG, "preset %02x: ending wake pulse after %u ms",
+               this->preset_buttons_, (unsigned) elapsed);
+      if (this->desk_pin_ != nullptr)
+        this->desk_pin_->digital_write(false);
+      this->preset_wake_pin_low_ = true;
+    } else if (this->preset_waking_ && elapsed >= JSDRIVE_PRESET_WAKE_TIMEOUT) {
       uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
       ESP_LOGW(TAG, "preset %02x: wake timed out after %u frames; sending release",
                this->preset_buttons_, this->preset_send_count_);
@@ -338,6 +345,7 @@ void JSDrive::press_preset(uint8_t buttons) {
     this->preset_started_ = millis();
     this->preset_buttons_ = buttons;
     this->preset_waking_ = true;
+    this->preset_wake_pin_low_ = false;
     this->preset_waiting_ = false;
     this->preset_rearmed_ = false;
     this->preset_pressing_ = false;

@@ -179,8 +179,9 @@ void JSDrive::loop() {
                millis() - this->preset_last_send_ >= JSDRIVE_PRESET_SEND_INTERVAL) {
       uint8_t buf[] = {0xa5, 0, this->preset_buttons_,
                        (uint8_t) (0xff - this->preset_buttons_), 0xff};
-      if (this->preset_send_count_ == 0)
+      if (this->preset_send_count_ == 0) {
         ESP_LOGV(TAG, "preset %02x: sending first preset frame", this->preset_buttons_);
+      }
       this->desk_uart_->write_array(buf, 5);
       this->preset_last_send_ = millis();
       this->preset_send_count_++;

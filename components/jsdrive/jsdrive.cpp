@@ -118,6 +118,10 @@ void JSDrive::loop() {
                  this->preset_buttons_, millis() - this->preset_started_,
                  this->preset_send_count_);
         this->desk_uart_->write_array(buf, 5);
+        if (this->desk_pin_ != nullptr) {
+          ESP_LOGV(TAG, "preset %02x: ending wake pulse", this->preset_buttons_);
+          this->desk_pin_->digital_write(false);
+        }
         this->preset_waking_ = false;
         this->preset_waiting_ = true;
         this->preset_started_ = millis();
@@ -166,6 +170,11 @@ void JSDrive::loop() {
     } else if (this->preset_waiting_ && elapsed >= JSDRIVE_PRESET_SETTLE_TIME) {
       ESP_LOGV(TAG, "preset %02x: wake movement settled; starting preset press",
                this->preset_buttons_);
+      if (this->desk_pin_ != nullptr) {
+        ESP_LOGV(TAG, "preset %02x: starting separate preset pulse",
+                 this->preset_buttons_);
+        this->desk_pin_->digital_write(true);
+      }
       this->preset_waiting_ = false;
       this->preset_pressing_ = true;
       this->preset_started_ = millis();

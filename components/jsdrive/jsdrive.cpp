@@ -113,6 +113,7 @@ void JSDrive::loop() {
     }
     if (have_data) {
       this->height_known_ = true;
+      ESP_LOGVV(TAG, "desk height frame: %.1f", num);
       if (this->current_pos_ != num) {
         ESP_LOGV(TAG, "desk height: %.1f", num);
         if (this->height_sensor_ != nullptr)
@@ -184,6 +185,8 @@ void JSDrive::loop() {
         continue;
       }
       buttons = d[1];
+      ESP_LOGVV(TAG, "remote frame: a5 %02x %02x %02x %02x", d[0], d[1],
+                d[2], d[3]);
       if (!this->buttons_logged_ || buttons != this->last_logged_buttons_) {
         ESP_LOGV(TAG, "remote frame: a5 %02x %02x %02x %02x", d[0], d[1],
                  d[2], d[3]);

@@ -57,13 +57,6 @@ void JSDrive::setup() {
 }
 
 void JSDrive::loop() {
-  if (this->wake_duration_ != 0 && millis() - this->wake_started_ >= this->wake_duration_) {
-    ESP_LOGV(TAG, "desk wake hold finished");
-    this->wake_duration_ = 0;
-    if (this->desk_pin_ != nullptr)
-      this->desk_pin_->digital_write(false);
-  }
-
   uint8_t c;
   bool have_data = false;
   if (this->desk_uart_ != nullptr) {
@@ -211,7 +204,7 @@ void JSDrive::loop() {
       }
     }
   }
-  if (this->remote_pin_ != nullptr && this->preset_buttons_ == 0 && this->wake_duration_ == 0) {
+  if (this->remote_pin_ != nullptr && this->preset_buttons_ == 0) {
     bool pin_state = this->remote_pin_->digital_read();
     if (pin_state != this->remote_pin_prev_) {
       this->remote_pin_prev_ = pin_state;
@@ -247,7 +240,6 @@ void JSDrive::move_to(float height) {
     ESP_LOGW(TAG, "ignoring move to %.1f: no valid desk height received", height);
     return;
   }
-  this->wake_desk_for(10);
   this->moving_ = true;
   this->target_pos_ = height;
   this->move_dir_ = height > this->current_pos_;
@@ -285,7 +277,6 @@ void JSDrive::press_preset4() {
 void JSDrive::press_preset(uint8_t buttons) {
   if (this->desk_uart_ != nullptr) {
     ESP_LOGV(TAG, "simulating preset button: %02x", buttons);
-    this->wake_duration_ = 0;
     if (this->desk_pin_ != nullptr) {
       ESP_LOGV(TAG, "desk wake pin set: high");
       this->desk_pin_->digital_write(true);
@@ -296,15 +287,6 @@ void JSDrive::press_preset(uint8_t buttons) {
     this->preset_buttons_ = buttons;
     this->preset_pressing_ = false;
     this->preset_last_send_ = this->preset_started_ - JSDRIVE_PRESET_SEND_INTERVAL;
-  }
-}
-
-void JSDrive::wake_desk_for(uint32_t duration_ms) {
-  if (this->desk_pin_ != nullptr) {
-    ESP_LOGV(TAG, "holding desk wake pin high for %u ms", duration_ms);
-    this->desk_pin_->digital_write(true);
-    this->wake_started_ = millis();
-    this->wake_duration_ = duration_ms;
   }
 }
 

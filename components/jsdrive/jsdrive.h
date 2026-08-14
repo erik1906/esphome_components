@@ -77,6 +77,8 @@ class JSDrive : public Component {
   bool preset_pressing_{false};
   uint32_t preset_started_{0};
   uint32_t preset_last_send_{0};
+  uint32_t preset_last_log_{0};
+  uint16_t preset_send_count_{0};
   uint8_t last_logged_buttons_{0};
   bool buttons_logged_{false};
   GPIOPin* remote_pin_{nullptr};

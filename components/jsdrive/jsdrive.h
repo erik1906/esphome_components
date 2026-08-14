@@ -10,6 +10,9 @@ namespace esphome {
 namespace jsdrive {
 
 static constexpr float JSDRIVE_BRAKING_MARGIN = 2.0f;
+static constexpr float JSDRIVE_MOVE_TOLERANCE = 0.2f;
+static constexpr uint32_t JSDRIVE_MOVE_SETTLE_TIME = 500;
+static constexpr uint32_t JSDRIVE_MOVE_SEND_INTERVAL = 10;
 static constexpr uint32_t JSDRIVE_PRESET_WAKE_TIMEOUT = 1500;
 static constexpr uint32_t JSDRIVE_PRESET_WAKE_LEAD_TIME = 25;
 static constexpr uint32_t JSDRIVE_PRESET_WAKE_PULSE_TIME = 120;
@@ -75,7 +78,10 @@ class JSDrive : public Component {
   float target_pos_{-1};
   float stop_pos_{-1};
   bool moving_{false};
+  bool move_settling_{false};
   bool move_dir_;  // true is up
+  uint32_t move_settled_at_{0};
+  uint32_t move_last_send_{0};
   uint8_t preset_buttons_{0};
   bool preset_waking_{false};
   bool preset_wake_pin_low_{false};

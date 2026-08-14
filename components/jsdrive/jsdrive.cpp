@@ -131,19 +131,47 @@ void JSDrive::loop() {
     }
   }
   if (this->moving_) {
-    if ((this->move_dir_ && (this->current_pos_ >= this->stop_pos_)) ||
-        (!this->move_dir_ && (this->current_pos_ <= this->stop_pos_))) {
+    if (this->move_settling_) {
       uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
-      ESP_LOGV(TAG, "move target %.1f braking at %.1f; sending release",
-               this->target_pos_, this->current_pos_);
-      this->desk_uart_->write_array(buf, 5);
-      this->moving_ = false;
-      this->current_operation = JSDRIVE_OPERATION_IDLE;
+      if (millis() - this->move_last_send_ >= JSDRIVE_MOVE_SEND_INTERVAL) {
+        this->desk_uart_->write_array(buf, 5);
+        this->move_last_send_ = millis();
+      }
+      if (millis() - this->move_settled_at_ >= JSDRIVE_MOVE_SETTLE_TIME) {
+        float error = this->target_pos_ - this->current_pos_;
+        if (fabsf(error) <= JSDRIVE_MOVE_TOLERANCE) {
+          ESP_LOGV(TAG, "move target %.1f reached at %.1f", this->target_pos_,
+                   this->current_pos_);
+          this->moving_ = false;
+          this->current_operation = JSDRIVE_OPERATION_IDLE;
+        } else {
+          this->move_dir_ = error > 0;
+          float half_error = fabsf(error) / 2.0f;
+          float margin = half_error < JSDRIVE_BRAKING_MARGIN ? half_error
+                                                              : JSDRIVE_BRAKING_MARGIN;
+          this->stop_pos_ = this->target_pos_ +
+                            (this->move_dir_ ? -margin : margin);
+          this->move_settling_ = false;
+          ESP_LOGV(TAG, "correcting move %s: current %.1f, target %.1f, brake %.1f",
+                   this->move_dir_ ? "up" : "down", this->current_pos_,
+                   this->target_pos_, this->stop_pos_);
+        }
+      }
+    } else if ((this->move_dir_ && (this->current_pos_ >= this->stop_pos_)) ||
+               (!this->move_dir_ && (this->current_pos_ <= this->stop_pos_))) {
+      ESP_LOGV(TAG, "move target %.1f braking at %.1f", this->target_pos_,
+               this->current_pos_);
+      this->move_settling_ = true;
+      this->move_settled_at_ = millis();
+      this->move_last_send_ = this->move_settled_at_ - JSDRIVE_MOVE_SEND_INTERVAL;
     } else {
       static uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
       buf[2] = (this->move_dir_ ? 0x20 : 0x40);
       buf[3] = 0xff - buf[2];
-      this->desk_uart_->write_array(buf, 5);
+      if (millis() - this->move_last_send_ >= JSDRIVE_MOVE_SEND_INTERVAL) {
+        this->desk_uart_->write_array(buf, 5);
+        this->move_last_send_ = millis();
+      }
     }
   }
   if (this->preset_buttons_ != 0) {
@@ -300,10 +328,12 @@ void JSDrive::move_to(float height) {
     return;
   }
   this->moving_ = true;
+  this->move_settling_ = false;
   this->target_pos_ = height;
   this->move_dir_ = height > this->current_pos_;
   this->stop_pos_ = this->move_dir_ ? height - JSDRIVE_BRAKING_MARGIN
                                     : height + JSDRIVE_BRAKING_MARGIN;
+  this->move_last_send_ = millis() - JSDRIVE_MOVE_SEND_INTERVAL;
   this->current_operation =
       this->move_dir_ ? JSDRIVE_OPERATION_RAISING : JSDRIVE_OPERATION_LOWERING;
   ESP_LOGV(TAG, "starting move %s: current %.1f, target %.1f, brake %.1f",
@@ -313,7 +343,12 @@ void JSDrive::move_to(float height) {
 
 void JSDrive::stop() {
   ESP_LOGV(TAG, "stopping move at %.1f", this->current_pos_);
+  if (this->desk_uart_ != nullptr) {
+    uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
+    this->desk_uart_->write_array(buf, 5);
+  }
   this->moving_ = false;
+  this->move_settling_ = false;
   this->current_operation = JSDRIVE_OPERATION_IDLE;
 }
 

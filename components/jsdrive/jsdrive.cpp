@@ -115,7 +115,7 @@ void JSDrive::loop() {
       if (this->preset_waking_) {
         uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
         ESP_LOGV(TAG, "preset %02x: desk awake after %u ms and %u wake frames",
-                 this->preset_buttons_, millis() - this->preset_started_,
+                 this->preset_buttons_, (unsigned) (millis() - this->preset_started_),
                  this->preset_send_count_);
         this->desk_uart_->write_array(buf, 5);
         if (this->desk_pin_ != nullptr) {
@@ -164,7 +164,7 @@ void JSDrive::loop() {
       this->preset_send_count_++;
       if (millis() - this->preset_last_log_ >= 250) {
         ESP_LOGV(TAG, "preset %02x: waking for %u ms, %u frames sent",
-                 this->preset_buttons_, elapsed, this->preset_send_count_);
+                 this->preset_buttons_, (unsigned) elapsed, this->preset_send_count_);
         this->preset_last_log_ = millis();
       }
     } else if (this->preset_waiting_ && elapsed >= JSDRIVE_PRESET_SETTLE_TIME) {
@@ -182,7 +182,7 @@ void JSDrive::loop() {
     } else if (this->preset_pressing_ && elapsed >= JSDRIVE_PRESET_HOLD_TIME) {
       uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
       ESP_LOGV(TAG, "preset %02x: releasing after %u ms and %u frames",
-               this->preset_buttons_, elapsed, this->preset_send_count_);
+               this->preset_buttons_, (unsigned) elapsed, this->preset_send_count_);
       this->desk_uart_->write_array(buf, 5);
       this->preset_buttons_ = 0;
       this->preset_pressing_ = false;

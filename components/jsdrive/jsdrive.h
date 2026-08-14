@@ -10,7 +10,7 @@ namespace esphome {
 namespace jsdrive {
 
 static constexpr float JSDRIVE_BRAKING_MARGIN = 2.0f;
-static constexpr uint32_t JSDRIVE_PRESET_WAKE_TIME = 100;
+static constexpr uint32_t JSDRIVE_PRESET_WAKE_TIME = 3000;
 static constexpr uint32_t JSDRIVE_PRESET_HOLD_TIME = 200;
 static constexpr uint32_t JSDRIVE_PRESET_SEND_INTERVAL = 10;
 

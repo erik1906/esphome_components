@@ -147,10 +147,12 @@ void JSDrive::loop() {
         ESP_LOGV(TAG, "desk wake pin set: low");
         this->desk_pin_->digital_write(false);
       }
-    } else if (this->preset_pressing_) {
+    } else if (this->preset_pressing_ &&
+               millis() - this->preset_last_send_ >= JSDRIVE_PRESET_SEND_INTERVAL) {
       uint8_t buf[] = {0xa5, 0, this->preset_buttons_,
                        (uint8_t) (0xff - this->preset_buttons_), 0xff};
       this->desk_uart_->write_array(buf, 5);
+      this->preset_last_send_ = millis();
     }
   }
   uint8_t buttons = 0;
@@ -285,6 +287,7 @@ void JSDrive::press_preset(uint8_t buttons) {
     this->preset_started_ = millis();
     this->preset_buttons_ = buttons;
     this->preset_pressing_ = false;
+    this->preset_last_send_ = this->preset_started_ - JSDRIVE_PRESET_SEND_INTERVAL;
   }
 }
 

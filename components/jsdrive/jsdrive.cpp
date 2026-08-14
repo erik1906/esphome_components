@@ -124,6 +124,7 @@ void JSDrive::loop() {
         }
         this->preset_waking_ = false;
         this->preset_waiting_ = true;
+        this->preset_rearmed_ = false;
         this->preset_started_ = millis();
         this->preset_send_count_ = 0;
       }
@@ -167,14 +168,16 @@ void JSDrive::loop() {
                  this->preset_buttons_, (unsigned) elapsed, this->preset_send_count_);
         this->preset_last_log_ = millis();
       }
+    } else if (this->preset_waiting_ && !this->preset_rearmed_ &&
+               elapsed >= JSDRIVE_PRESET_REARM_TIME) {
+      ESP_LOGV(TAG, "preset %02x: rearming wake pin after %u ms",
+               this->preset_buttons_, (unsigned) elapsed);
+      if (this->desk_pin_ != nullptr)
+        this->desk_pin_->digital_write(true);
+      this->preset_rearmed_ = true;
     } else if (this->preset_waiting_ && elapsed >= JSDRIVE_PRESET_SETTLE_TIME) {
       ESP_LOGV(TAG, "preset %02x: wake movement settled; starting preset press",
                this->preset_buttons_);
-      if (this->desk_pin_ != nullptr) {
-        ESP_LOGV(TAG, "preset %02x: starting separate preset pulse",
-                 this->preset_buttons_);
-        this->desk_pin_->digital_write(true);
-      }
       this->preset_waiting_ = false;
       this->preset_pressing_ = true;
       this->preset_started_ = millis();
@@ -334,6 +337,7 @@ void JSDrive::press_preset(uint8_t buttons) {
     this->preset_buttons_ = buttons;
     this->preset_waking_ = true;
     this->preset_waiting_ = false;
+    this->preset_rearmed_ = false;
     this->preset_pressing_ = false;
     this->preset_last_send_ = this->preset_started_ - JSDRIVE_PRESET_SEND_INTERVAL;
     this->preset_last_log_ = this->preset_started_ - 250;

@@ -11,7 +11,8 @@ namespace jsdrive {
 
 static constexpr float JSDRIVE_BRAKING_MARGIN = 2.0f;
 static constexpr uint32_t JSDRIVE_PRESET_WAKE_TIME = 0;
-static constexpr uint32_t JSDRIVE_PRESET_HOLD_TIME = 200;
+// Desk first responds about 750 ms after physical controller wakes it.
+static constexpr uint32_t JSDRIVE_PRESET_HOLD_TIME = 1500;
 static constexpr uint32_t JSDRIVE_PRESET_SEND_INTERVAL = 10;
 
 enum JSDriveOperation : uint8_t {

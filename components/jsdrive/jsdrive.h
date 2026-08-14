@@ -11,6 +11,7 @@ namespace jsdrive {
 
 static constexpr float JSDRIVE_BRAKING_MARGIN = 2.0f;
 static constexpr uint32_t JSDRIVE_PRESET_WAKE_TIMEOUT = 1500;
+static constexpr uint32_t JSDRIVE_PRESET_WAKE_LEAD_TIME = 25;
 static constexpr uint32_t JSDRIVE_PRESET_REARM_TIME = 50;
 static constexpr uint32_t JSDRIVE_PRESET_SETTLE_TIME = 500;
 static constexpr uint32_t JSDRIVE_PRESET_HOLD_TIME = 300;

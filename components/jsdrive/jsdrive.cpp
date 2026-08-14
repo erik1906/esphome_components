@@ -157,8 +157,11 @@ void JSDrive::loop() {
       this->preset_waking_ = false;
       if (this->desk_pin_ != nullptr)
         this->desk_pin_->digital_write(false);
-    } else if (this->preset_waking_ && this->preset_send_count_ == 0) {
+    } else if (this->preset_waking_ && this->preset_send_count_ == 0 &&
+               elapsed >= JSDRIVE_PRESET_WAKE_LEAD_TIME) {
       uint8_t buf[] = {0xa5, 0, 0x20, 0xdf, 0xff};
+      ESP_LOGV(TAG, "preset %02x: sending wake frame after %u ms lead",
+               this->preset_buttons_, (unsigned) elapsed);
       this->desk_uart_->write_array(buf, 5);
       this->preset_last_send_ = millis();
       this->preset_send_count_++;

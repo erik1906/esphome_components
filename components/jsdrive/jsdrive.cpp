@@ -119,9 +119,8 @@ void JSDrive::loop() {
                  this->preset_send_count_);
         this->desk_uart_->write_array(buf, 5);
         this->preset_waking_ = false;
-        this->preset_pressing_ = true;
+        this->preset_waiting_ = true;
         this->preset_started_ = millis();
-        this->preset_last_send_ = this->preset_started_ - JSDRIVE_PRESET_SEND_INTERVAL;
         this->preset_send_count_ = 0;
       }
     }
@@ -164,6 +163,13 @@ void JSDrive::loop() {
                  this->preset_buttons_, elapsed, this->preset_send_count_);
         this->preset_last_log_ = millis();
       }
+    } else if (this->preset_waiting_ && elapsed >= JSDRIVE_PRESET_SETTLE_TIME) {
+      ESP_LOGV(TAG, "preset %02x: wake movement settled; starting preset press",
+               this->preset_buttons_);
+      this->preset_waiting_ = false;
+      this->preset_pressing_ = true;
+      this->preset_started_ = millis();
+      this->preset_last_send_ = this->preset_started_ - JSDRIVE_PRESET_SEND_INTERVAL;
     } else if (this->preset_pressing_ && elapsed >= JSDRIVE_PRESET_HOLD_TIME) {
       uint8_t buf[] = {0xa5, 0, 0, 0xff, 0xff};
       ESP_LOGV(TAG, "preset %02x: releasing after %u ms and %u frames",
@@ -318,6 +324,7 @@ void JSDrive::press_preset(uint8_t buttons) {
     this->preset_started_ = millis();
     this->preset_buttons_ = buttons;
     this->preset_waking_ = true;
+    this->preset_waiting_ = false;
     this->preset_pressing_ = false;
     this->preset_last_send_ = this->preset_started_ - JSDRIVE_PRESET_SEND_INTERVAL;
     this->preset_last_log_ = this->preset_started_ - 250;

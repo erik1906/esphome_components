@@ -46,7 +46,7 @@ class JSDrive : public Component {
   void press_preset2();
   void press_preset3();
   void press_preset4();
-  void wake_desk();
+  void wake_desk_for(uint32_t duration_ms);
 
   JSDriveOperation current_operation{JSDRIVE_OPERATION_IDLE};
 
@@ -77,6 +77,8 @@ class JSDrive : public Component {
   bool preset_pressing_{false};
   uint32_t preset_started_{0};
   uint32_t preset_last_send_{0};
+  uint32_t wake_started_{0};
+  uint32_t wake_duration_{0};
   uint8_t last_logged_buttons_{0};
   bool buttons_logged_{false};
   GPIOPin* remote_pin_{nullptr};

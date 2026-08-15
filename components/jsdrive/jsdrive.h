@@ -16,6 +16,7 @@ static constexpr uint32_t JSDRIVE_MOVE_SEND_INTERVAL = 10;
 static constexpr uint32_t JSDRIVE_WAKE_TEST_SEND_INTERVAL = 10;
 static constexpr uint32_t JSDRIVE_PRESET_HOLD_TIME = 300;
 static constexpr uint32_t JSDRIVE_PRESET_SEND_INTERVAL = 10;
+static constexpr uint32_t JSDRIVE_PRESET_WAKE_TIMEOUT = 1500;
 
 enum JSDriveOperation : uint8_t {
   JSDRIVE_OPERATION_IDLE = 0,
@@ -55,6 +56,8 @@ class JSDrive : public Component {
 
  protected:
   void press_preset(uint8_t buttons);
+  void start_preset(uint8_t buttons);
+  void start_wake(uint32_t duration_ms);
   void end_wake_test(const char *reason);
 
   uart::UARTComponent *remote_uart_{nullptr};
@@ -84,6 +87,7 @@ class JSDrive : public Component {
   uint32_t wake_test_started_{0};
   uint32_t wake_test_duration_{0};
   uint32_t wake_test_last_send_{0};
+  uint8_t pending_preset_buttons_{0};
   uint8_t preset_buttons_{0};
   uint32_t preset_started_{0};
   uint32_t preset_last_send_{0};
